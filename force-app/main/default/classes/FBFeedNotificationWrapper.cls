@@ -19,6 +19,7 @@ public class FBFeedNotificationWrapper {
 		public Integer created_time;	//1690447351
 		public String message;	//Example post content.
 		public cls_from from_c;
+        public String link;
 	}
 	public class cls_from {
 		public String name;	//Test Page
