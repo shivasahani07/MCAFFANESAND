@@ -4,59 +4,38 @@
 * Last Modfied By  : shubham kumar
 * Descritpion      : This class contains all the api's related to instagram.
 */
-global class InstagramAuthHelper {
+public class InstagramAuthHelper {
     
     //Getting the basic details from custom setting
     private static Instagram_Api_Details__c fap = Instagram_Api_Details__c.getInstance();
-    
     private static final String CLIENT_ID               = fap.CLIENT_ID__c;
     private static String CLIENT_SECRET                 = fap.CLIENT_SECRET__c;
     private static String REDIRECT_URI                  = fap.REDIRECT_URI__c;
     private static String accessToken                   = fap.accessToken__c;
     private static String basicUrl                      = fap.basicUrl__c;
     private static String businessUserId                = fap.businessUserId__c;
+    //Getting the record Type Id
     private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
-    // This method will get the business user id
-    /*public InstagramAuthHelper(){
-
-String endpointUrl = basicUrl+'me/accounts?fields=instagram_business_account';
-Map<String, String> queryParams = new Map<String, String>();
-Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+accessToken};
-HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(endpointUrl, queryParams, headers);
-system.debug('Response==>'+response.getBody());
-// Process the response
-if (response.getStatusCode() == 200) {
-// Request successful, parse the response
-Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
-instaJSONHandler jsonResponse = instaJSONHandler.parse(response.getBody());
-
-system.debug('responseMap=======>'+jsonResponse.data[0].instagram_business_account.id);
-businessUserId = jsonResponse.data[0].instagram_business_account.id;
-//return businessUserId;// jsonResponse.data[0].instagram_business_account;
-// Handle the response data as per your application's requirements
-} else {
-// Request failed, handle the error
-String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.getStatus();
-//return errorMessage;
-//System.debug(errorMessage);
-}
-}*/
     
+    //Get all the posts that are related to this business user id
     @Future(callout=true)
-    global static void getAllPostsFromInstaForUserId(){
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where recordTypeId = :caseRecordTypeId];
+    public static void getAllPostsFromInstaForUserId(){
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId];
         List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
         List<Post_Comments__c> postCommentListToBeUpdated         = new List<Post_Comments__c>();
+        List<Id> caseIdsToBeUpdated                               = new List<Id>();
         map<String,List<Post_Comments__c>> commentsOnPostByPostId = new map<String,List<Post_Comments__c>>();
         map<String,String> caseIdByPostId                         = new map<String,String>();
         map<String,String> postCommentIdByPostId                  = new map<String,String>();
+        map<String,String> caseIdByPostCommentId                  = new map<String,String>();
         List<String> casePostIds                                  = new List<String>();
         for(Case caseRec : existingCaseList){
             commentsOnPostByPostId.put(caseRec.Post_Id__c,caseRec.Post_Comments__r);
             caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
             for(Post_Comments__c pocRec : caseRec.Post_Comments__r){
                 postCommentIdByPostId.put(pocRec.Comment_Id__c,pocRec.Id);
+                caseIdByPostCommentId.put(pocRec.Comment_Id__c,pocRec.Case__c);
             }
         }
         system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
@@ -132,11 +111,16 @@ String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.ge
                                 system.debug('replies are'+postInfoRec.replies);
                                 postCommentList.add(commentRec);
                             }else{
+                                //This will come here comments have to be updated..
                                 system.debug('replies are'+postInfoRec.replies);
                                 Post_Comments__c commentRec = new Post_Comments__c();
                                 commentRec.Id = postCommentIdByPostId.get(postInfoRec.Id);
+                                if(caseIdByPostCommentId.ContainsKey(postInfoRec.Id)){
+                                    caseIdsToBeUpdated.add(caseIdByPostCommentId.get(postInfoRec.Id));    
+                                }
                                 commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
                                 postCommentListToBeUpdated.add(commentRec);
+                                
                             }
                         }
                     }
@@ -148,12 +132,15 @@ String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.ge
         system.debug('postCommentList'+postCommentList);
         system.debug('postCommentList'+postCommentList.size());
         system.debug('insertedCaseList'+insertedCaseList.size());
+        system.debug('These cases have new comments do have a look'+insertedCaseList.size());
+        
         Database.insert(postCommentList, false);
         Database.update(postCommentListToBeUpdated,false);
     }
 
+    //Get all the mentions that are related to this business user id
     @Future(callout=true)
-    global static void getAllMentionsFromInstaForUserId(){
+    public static void getAllMentionsFromInstaForUserId(){
         List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where recordTypeId = :caseRecordTypeId];
         List<case> insertedCaseList = new List<case>();
         
@@ -262,7 +249,7 @@ String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.ge
     }   
     
     @Future(callout=true)
-    global static void getPostDetailsByHashTagId(String hashtagName){
+    public static void getPostDetailsByHashTagId(String hashtagName){
         List<Case> caseList = new List<Case>();
         String hashTagId = getHashtagIdFromInsta(hashtagName);
         system.debug('hashTagId'+hashTagId);
@@ -324,7 +311,7 @@ String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.ge
     }
     
     // This method will get the id corresponding to the hashtag
-    global static String getHashtagIdFromInsta(String hashtagName){
+    public static String getHashtagIdFromInsta(String hashtagName){
         system.debug('businessUserId---->>'+businessUserId + 'hashtagName--->>' +hashtagName );
         //InstagramAuthHelper instaAuth = new InstagramAuthHelper();
         String endpointUrl = basicUrl+'ig_hashtag_search?user_id='+businessUserId+'&q='+hashtagName;
@@ -343,194 +330,6 @@ String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.ge
             String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.getStatus();
             return errorMessage;
         }
-    }
-   
-    
-    //Pass this method the Comment id and the media id will be fetched.
-    global static void getAllDetailsOfComments(String commentId){
-        List<Case> caseList = new List<Case>();
-        String endpointUrl = basicUrl+commentId+'?fields=replies{text,username,timestamp,user},text,user,timestamp,username,media';
-        Map<String, String> queryParams = new Map<String, String>();
-        Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+accessToken};
-            HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(endpointUrl, queryParams, headers);
-        system.debug('Response==>'+response.getBody());
-        // Process the response
-        if (response.getStatusCode() == 200) {
-            InstaCommentWrapper jsonResponse = InstaCommentWrapper.parse(response.getBody());
-            //System.debug('The Media id of this comment is==>'+jsonResponse.media.id );
-            if(!test.isRunningTest()){
-                getAllDetailsOfMedia(jsonResponse.media.id);    
-            }
-        }else{
-            String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.getStatus();
-            System.debug(errorMessage);
-        }
-    }
-    
-    //Pass this method the media id and all the details related to post will be fetched.
-    global static void getAllDetailsOfMedia(String mediaId){
-        
-        List<Post_Comments__c> postCommentList = new List<Post_Comments__c>();
-        List<Post_Comments__c> postCommentListToBeUpdated = new List<Post_Comments__c>();
-        map<String,List<Post_Comments__c>> commentsOnPostByPostId = new map<String,List<Post_Comments__c>>();
-        map<String,String> caseIdByPostId = new map<String,String>();
-        map<String,String> postCommentIdByPostId = new map<String,String>();
-        List<Case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case];
-        
-        List<String> casePostIds = new List<String>();
-        for(Case caseRec : existingCaseList){
-            commentsOnPostByPostId.put(caseRec.Post_Id__c,caseRec.Post_Comments__r);
-            caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
-            for(Post_Comments__c pocRec : caseRec.Post_Comments__r){
-                postCommentIdByPostId.put(pocRec.Comment_Id__c,pocRec.Id);
-            }
-        }
-        
-        String endpointUrl = basicUrl+mediaId+'?fields=media_url,comments_count,permalink,caption,media_type,shortcode,timestamp,username,comments{id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}';
-        Map<String, String> queryParams = new Map<String, String>();
-        Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+accessToken};
-            HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(endpointUrl, queryParams, headers);
-        InstagramMediaResponseWrapper postInfo = (InstagramMediaResponseWrapper) JSON.deserialize(response.getBody(), InstagramMediaResponseWrapper.class);
-        
-        system.debug('responseWrapper'+postInfo);
-        //for(InstagramMediaResponseWrapper.DataWrapper postInfo : responseWrapper.data){
-        system.debug('responseWrapper'+postInfo.Id);
-        if(!commentsOnPostByPostId.keyset().contains(postInfo.Id)){
-            Case newCase = new case();
-            newCase.Related_to__c = postInfo.username;
-            newCase.Origin = 'Instagram';
-            newCase.Post_Id__c = postInfo.id;
-            newcase.RecordTypeId = caseRecordTypeId;
-            newcase.Created_Time__c = String.valueOf(postInfo.timestamp);
-            newcase.POST_URL__c = postInfo.permalink;
-            if((postInfo.comments != null)){
-                newcase.Comments_JSON__c = string.valueOf(postInfo.comments.data);
-            }
-            newcase.OwnerId = userinfo.getuserId();
-            newcase.Priority = 'High';
-            newcase.Type_of_Post__c = 'Post';
-            newcase.Subject = 'This case is coming from Instagram';
-            newcase.Description = postInfo.caption;
-            insert newcase;
-            system.debug('postInfo.comments'+postInfo.comments);
-            if((postInfo.comments != null)){
-                for(InstagramMediaResponseWrapper.cls_data postInfoRec : postInfo.comments.data){
-                    Post_Comments__c commentRec = new Post_Comments__c();
-                    commentRec.Case__c = newcase.Id;
-                    commentRec.Comment__c = postInfoRec.text;
-                    commentRec.Comment_Id__c = postInfoRec.id;
-                    commentRec.Commented_By__c = postInfoRec.username;
-                    commentRec.Post_comment_Time__c = postInfoRec.timestamp;
-                    commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                    commentRec.Post_Url__c	 = postInfo.permalink;
-                    system.debug('replies are'+postInfoRec.replies);
-                    postCommentList.add(commentRec);
-                }    
-            }
-        }else{
-            if(postInfo.comments != null){
-                for(InstagramMediaResponseWrapper.cls_data postInfoRec : postInfo.comments.data){
-                    if(commentsOnPostByPostId.containsKey(postInfo.Id)){
-                        List<String> postCommentIds = new List<String>();
-                        for(Post_Comments__c poCom :  commentsOnPostByPostId.get(postInfo.Id)){
-                            postCommentIds.add(poCom.Comment_Id__c);
-                        }
-                        if(!postCommentIds.contains(postInfoRec.id)){
-                            Post_Comments__c commentRec = new Post_Comments__c();
-                            commentRec.Case__c = caseIdByPostId.get(postInfo.Id);
-                            commentRec.Comment__c = postInfoRec.text;
-                            commentRec.Comment_Id__c = postInfoRec.id;
-                            commentRec.Commented_By__c = postInfoRec.username;
-                            commentRec.Post_comment_Time__c = postInfoRec.timestamp;
-                            commentRec.Post_Url__c	 = postInfo.permalink;
-                            commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                            system.debug('replies are'+postInfoRec.replies);
-                            postCommentList.add(commentRec);
-                        }else{
-                            system.debug('replies are'+postInfoRec.replies);
-                            Post_Comments__c commentRec = new Post_Comments__c();
-                            commentRec.Id = postCommentIdByPostId.get(postInfoRec.id);
-                            commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                            postCommentListToBeUpdated.add(commentRec);
-                        }
-                    }
-                }
-            }else{
-                system.debug('postInfo.comments'+postInfo.comments);
-            }
-        }
-        
-        insert postCommentList;
-        update postCommentListToBeUpdated;
-    }
-    
-    global static void getAllPostsFromInstaForUserIdDummy(){
-        List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
-        List<Post_Comments__c> postCommentListToBeUpdated         = new List<Post_Comments__c>();
-        map<String,List<Post_Comments__c>> commentsOnPostByPostId = new map<String,List<Post_Comments__c>>();
-        map<String,String> caseIdByPostId                         = new map<String,String>();
-        map<String,String> postCommentIdByPostId                  = new map<String,String>();
-        List<Case> existingCaseList                               = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case];
-        List<String> casePostIds                                  = new List<String>();
-        for(Case caseRec : existingCaseList){
-            commentsOnPostByPostId.put(caseRec.Post_Id__c,caseRec.Post_Comments__r);
-            caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
-            for(Post_Comments__c pocRec : caseRec.Post_Comments__r){
-                postCommentIdByPostId.put(pocRec.Comment_Id__c,pocRec.Id);
-            }
-        }
-        system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
-        //InstagramAuthHelper instaAuth = new InstagramAuthHelper();
-        String endpointUrl = 'https://graph.facebook.com/v17.0/17841455799037293/media';
-        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,shortcode,timestamp,username,comments{id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}?limit=75';
-        
-        String fullUrl = endpointUrl + '?' + fieldsParam + '&access_token=' + accessToken;
-        
-        Http http = new Http();
-        HttpRequest request = new HttpRequest();
-        request.setEndpoint(fullUrl);
-        request.setMethod('GET');
-        
-        HttpResponse response = http.send(request);
-        FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(response.getBody(), FacebookApiResponse.class);
-        
-        system.debug('responseWrapper'+responseWrapper);
-        for(FacebookApiResponse.DataWrapper postInfo : responseWrapper.data){
-            if(!commentsOnPostByPostId.keyset().contains(postInfo.Id)){
-                Case newCase = new case();
-                newCase.Related_to__c = postInfo.username;
-                newCase.Origin = 'Instagram';
-                newCase.Post_Id__c = postInfo.id;
-                newcase.Created_Time__c = String.valueOf(postInfo.timestamp);
-                newcase.POST_URL__c = postInfo.permalink;
-                if((postInfo.comments != null)){
-                    newcase.Comments_JSON__c = string.valueOf(postInfo.comments.data);
-                }
-                
-                newcase.OwnerId = userinfo.getuserId();
-                newcase.Priority = 'High';
-                newcase.Type = 'Post';
-               newcase.RecordTypeId = caseRecordTypeId;
-                newcase.Subject = 'This case is coming from Instagram';
-                newcase.Description = postInfo.caption;
-                insert newcase;
-                if((postInfo.comments != null)){
-                    for(FacebookApiResponse.CommentData postInfoRec : postInfo.comments.data){
-                        Post_Comments__c commentRec = new Post_Comments__c();
-                        commentRec.Case__c = newcase.Id;
-                        commentRec.Comment__c = postInfoRec.text;
-                        commentRec.Comment_Id__c = postInfoRec.Id;
-                        commentRec.Commented_By__c = postInfoRec.username;
-                        commentRec.Post_comment_Time__c = postInfoRec.timestamp;
-                        commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                        commentRec.Post_Url__c	 = postInfo.permalink;
-                        postCommentList.add(commentRec);
-                    }    
-                }
-            }
-        }
-        insert postCommentList;
-        update postCommentListToBeUpdated;
     }
     
 }

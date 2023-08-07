@@ -120,14 +120,11 @@ public class instaComponentController {
         system.debug('commentId'+commentId);
         system.debug('commentMessage'+commentMessage);
 	
-        //Post_Comments__c updateCheckbox = [SELECT id,name from Post_Comments__c where Comment_Id__c=:commentId] ;
-       // updateCheckbox.Sent_from_sfdc__c=true;
-       // updateCheckbox.Comment_Id__c=commentId;
-       // update updateCheckbox;
+       
+        commentMessage = EncodingUtil.urlEncode(commentMessage, 'UTF-8');
         commentMessage = commentMessage.replaceAll(' ','%20');
         commentMessage = commentMessage.replaceAll('<[^>]+>','');
-        String strRegex = '[^\\p{L}\\p{N}\\p{P}\\p{Z}]';
-        commentMessage = commentMessage.replaceAll(strRegex,'');
+       
         String endpointUrl = basicUrl+commentId+'/replies?message='+commentMessage;
         Map<String, String> queryParams = new Map<String, String>();
         Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+accessToken};

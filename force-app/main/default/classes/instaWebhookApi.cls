@@ -45,7 +45,7 @@ global without sharing class instaWebhookApi {
                 timeStamp = entry.time_c; //TODO convert this to readable format
                 for(InstaNotificationWrapper.cls_changes change: entry.changes) {
                     system.debug('post_id==>'+change.value);
-                    InstagramAuthHelper.getAllDetailsOfComments(change.value.id);
+                    //InstagramAuthHelper.getAllDetailsOfComments(change.value.id);
                     Case postCase = new Case(Origin = 'Instagram',Created_Time__c = getTimeStamp(timeStamp), Subject= 'New Comments that you are tagged in.', Post_Id__c = change.value.id, Description = change.value.text,Type='Comments',Mention__c='utilitarian_labs');
                     postCaseList.add(postCase);
                 }
@@ -69,7 +69,7 @@ global without sharing class instaWebhookApi {
         
         if(fbMentionObject != null) {
             system.debug('fbMentionObject--->'+fbMentionObject);
-            InstagramAuthHelper.getAllDetailsOfMedia(String.valueOf(fbMentionObject.get('media_id')));
+            //InstagramAuthHelper.getAllDetailsOfMedia(String.valueOf(fbMentionObject.get('media_id')));
         }
     }
    

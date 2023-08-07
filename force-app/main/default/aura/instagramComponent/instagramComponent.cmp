@@ -26,7 +26,7 @@
             <div style = "margin :1%">
                 
                 <div style ="width :20%">
-                    <img src="{!$Resource.Instagram}"/>
+                    <!--img src="{!$Resource.Instagram}"/-->
                 </div>
                 <aura:if isTrue="{!v.showSpinner}">
                     <div class="exampleHolder">
@@ -116,10 +116,11 @@
                                                 <p><lightning:formattedUrl value="{!acc.PostUrl}" label="Visit the POST" target="_blank" /></p>                                                                            
                                             </td-->
                                                 <td data-label="Action">
+                                                   
                                                     <aura:if isTrue="{!v.typeOfPost == 'Post'}">
                                                         <lightning:button title="{!acc.CommentId}" name="{!acc.CommentedBy}" value="{!acc.comment}" variant="brand" label="Reply"  onclick="{! c.openModel }" />
                                                     </aura:if>
-                                                    <lightning:button title="{!acc.CommentId}" name="{!acc.CommentedBy}" value="{!acc.comment}" variant="brand" label="View Replies"  onclick="{! c.viewCommentReplies }" />
+                                                    <lightning:button title="{!acc.CommentId}" name="{!acc.CommentedBy}" value="{!acc.comment}" variant="brand" label="Replies"  onclick="{! c.viewCommentReplies }" />
                                                 </td>
                                             </tr>
                                         </aura:iteration>
