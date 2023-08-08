@@ -151,9 +151,7 @@
                                 </aura:if>
                                 <!-- Modal/Popup Box Header Starts here-->
                                 <header class="slds-modal__header">
-                                    <ui:message severity="warning" closable="true">
-                                        Please do not use emoticons. 
-                                    </ui:message>
+                                   
                                     <lightning:buttonIcon iconName="utility:close"
                                                           onclick="{! c.closeModel }"
                                                           alternativeText="close"

@@ -22,7 +22,7 @@ public class InstagramAuthHelper {
     public static void getAllPostsFromInstaForUserId(){
         List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId];
         system.debug('existingCaseList==>'+existingCaseList);
-        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
+        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
         
         List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
@@ -39,16 +39,21 @@ public class InstagramAuthHelper {
             postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
             caseIdByPostCommentId.put(postCommRec.Comment_Id__c,postCommRec.Case__c);
             if(commentsOnPostByPostId.containsKey(postCommRec.Case__c)){
-                commentsOnPostByPostId.get(postCommRec.Case__c).add(postCommRec);
+                commentsOnPostByPostId.get(postCommRec.Case__r.Post_Id__c).add(postCommRec);
             }else{
                 list<Post_Comments__c> postCommNewList = new list<Post_Comments__c>();
                 postCommNewList.add(postCommRec);
-                commentsOnPostByPostId.put(postCommRec.Case__c,postCommNewList);
+                commentsOnPostByPostId.put(postCommRec.Case__r.Post_Id__c,postCommNewList);
             }
         }
         
         for(Case caseRec : existingCaseList){
+            list<Post_Comments__c> postCommNewList = new list<Post_Comments__c>();
             caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
+            if(!commentsOnPostByPostId.keyset().contains(caseRec.Post_Id__c)){
+                commentsOnPostByPostId.put(caseRec.Post_Id__c,postCommNewList);
+            }
+            
         }
         system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/media';
@@ -108,8 +113,10 @@ public class InstagramAuthHelper {
                     for(FacebookApiResponse.CommentData postInfoRec : postInfo.comments.data){
                         if(commentsOnPostByPostId.containsKey(postInfo.Id)){
                             List<String> postCommentIds = new List<String>();
-                            for(Post_Comments__c poCom :  commentsOnPostByPostId.get(postInfo.Id)){
-                                postCommentIds.add(poCom.Comment_Id__c);
+                            if(commentsOnPostByPostId.get(postInfo.Id).size() > 0){
+                                for(Post_Comments__c poCom :  commentsOnPostByPostId.get(postInfo.Id)){
+                                    postCommentIds.add(poCom.Comment_Id__c);
+                                }    
                             }
                             if(!postCommentIds.contains(postInfoRec.Id)){
                                 Post_Comments__c commentRec = new Post_Comments__c();
@@ -153,22 +160,41 @@ public class InstagramAuthHelper {
     //Get all the mentions that are related to this business user id
     @Future(callout=true)
     public static void getAllMentionsFromInstaForUserId(){
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where recordTypeId = :caseRecordTypeId];
-        List<case> insertedCaseList = new List<case>();
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId];
+        system.debug('existingCaseList==>'+existingCaseList);
+        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
         
+        List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
         List<Post_Comments__c> postCommentListToBeUpdated         = new List<Post_Comments__c>();
+        List<Id> caseIdsToBeUpdated                               = new List<Id>();
         map<String,List<Post_Comments__c>> commentsOnPostByPostId = new map<String,List<Post_Comments__c>>();
         map<String,String> caseIdByPostId                         = new map<String,String>();
         map<String,String> postCommentIdByPostId                  = new map<String,String>();
+        map<String,String> caseIdByPostCommentId                  = new map<String,String>();
         List<String> casePostIds                                  = new List<String>();
-        for(Case caseRec : existingCaseList){
-            commentsOnPostByPostId.put(caseRec.Post_Id__c,caseRec.Post_Comments__r);
-            caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
-            for(Post_Comments__c pocRec : caseRec.Post_Comments__r){
-                postCommentIdByPostId.put(pocRec.Comment_Id__c,pocRec.Id);
+        
+        
+        for(Post_Comments__c postCommRec : postCommentDataList){
+            postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
+            caseIdByPostCommentId.put(postCommRec.Comment_Id__c,postCommRec.Case__c);
+            if(commentsOnPostByPostId.containsKey(postCommRec.Case__c)){
+                commentsOnPostByPostId.get(postCommRec.Case__r.Post_Id__c).add(postCommRec);
+            }else{
+                list<Post_Comments__c> postCommNewList = new list<Post_Comments__c>();
+                postCommNewList.add(postCommRec);
+                commentsOnPostByPostId.put(postCommRec.Case__r.Post_Id__c,postCommNewList);
             }
         }
+        
+        for(Case caseRec : existingCaseList){
+            list<Post_Comments__c> postCommNewList = new list<Post_Comments__c>();
+            caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
+            if(!commentsOnPostByPostId.keyset().contains(caseRec.Post_Id__c)){
+                commentsOnPostByPostId.put(caseRec.Post_Id__c,postCommNewList);
+            }
+        }
+        system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         
         String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/tags';
         String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,timestamp,username,comments{id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
@@ -225,8 +251,10 @@ public class InstagramAuthHelper {
                     for(FacebookApiResponse.CommentData postInfoRec : postInfo.comments.data){
                         if(commentsOnPostByPostId.containsKey(postInfo.Id)){
                             List<String> postCommentIds = new List<String>();
-                            for(Post_Comments__c poCom :  commentsOnPostByPostId.get(postInfo.Id)){
-                                postCommentIds.add(poCom.Comment_Id__c);
+                            if(commentsOnPostByPostId.get(postInfo.Id).size() > 0){
+                                for(Post_Comments__c poCom :  commentsOnPostByPostId.get(postInfo.Id)){
+                                    postCommentIds.add(poCom.Comment_Id__c);
+                                }
                             }
                             if(!postCommentIds.contains(postInfoRec.Id)){
                                 Post_Comments__c commentRec = new Post_Comments__c();
@@ -266,20 +294,41 @@ public class InstagramAuthHelper {
         String hashTagId = getHashtagIdFromInsta(hashtagName);
         system.debug('hashTagId'+hashTagId);
         
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId];
+        system.debug('existingCaseList==>'+existingCaseList);
+        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
+        
+        List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
         List<Post_Comments__c> postCommentListToBeUpdated         = new List<Post_Comments__c>();
+        List<Id> caseIdsToBeUpdated                               = new List<Id>();
         map<String,List<Post_Comments__c>> commentsOnPostByPostId = new map<String,List<Post_Comments__c>>();
         map<String,String> caseIdByPostId                         = new map<String,String>();
         map<String,String> postCommentIdByPostId                  = new map<String,String>();
-        List<Case> existingCaseList                               = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case];
+        map<String,String> caseIdByPostCommentId                  = new map<String,String>();
         List<String> casePostIds                                  = new List<String>();
-        for(Case caseRec : existingCaseList){
-            commentsOnPostByPostId.put(caseRec.Post_Id__c,caseRec.Post_Comments__r);
-            caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
-            for(Post_Comments__c pocRec : caseRec.Post_Comments__r){
-                postCommentIdByPostId.put(pocRec.Comment_Id__c,pocRec.Id);
+        
+        
+        for(Post_Comments__c postCommRec : postCommentDataList){
+            postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
+            caseIdByPostCommentId.put(postCommRec.Comment_Id__c,postCommRec.Case__c);
+            if(commentsOnPostByPostId.containsKey(postCommRec.Case__c)){
+                commentsOnPostByPostId.get(postCommRec.Case__r.Post_Id__c).add(postCommRec);
+            }else{
+                list<Post_Comments__c> postCommNewList = new list<Post_Comments__c>();
+                postCommNewList.add(postCommRec);
+                commentsOnPostByPostId.put(postCommRec.Case__r.Post_Id__c,postCommNewList);
             }
         }
+        
+        for(Case caseRec : existingCaseList){
+            list<Post_Comments__c> postCommNewList = new list<Post_Comments__c>();
+            caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
+            if(!commentsOnPostByPostId.keyset().contains(caseRec.Post_Id__c)){
+                commentsOnPostByPostId.put(caseRec.Post_Id__c,postCommNewList);
+            }
+        }
+        system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         String endpointUrl = basicUrl+hashTagId+'/recent_media?fields=media_url,media_type,caption,permalink,timestamp&user_id='+businessUserId;
         Map<String, String> queryParams = new Map<String, String>();
         Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+accessToken};
