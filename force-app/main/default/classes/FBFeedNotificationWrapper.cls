@@ -4,7 +4,7 @@ public class FBFeedNotificationWrapper {
 	public String object_c;	//page
 	public class cls_entry {
 		public String id;	//0
-		public Integer time_c;	//1690447351
+		public Long time_c;	//1690447351
 		public cls_changes[] changes;
 	}
 	public class cls_changes {
@@ -16,7 +16,7 @@ public class FBFeedNotificationWrapper {
 		public String post_id;	//44444444_444444444
 		public String verb;	//add
 		public Integer published;	//1
-		public Integer created_time;	//1690447351
+		public Long created_time;	//1690447351
 		public String message;	//Example post content.
 		public cls_from from_c;
         public String link;

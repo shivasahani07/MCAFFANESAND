@@ -20,9 +20,18 @@ public class InstagramAuthHelper {
     //Get all the posts that are related to this business user id
     @Future(callout=true)
     public static void getAllPostsFromInstaForUserId(){
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
         system.debug('existingCaseList==>'+existingCaseList);
-        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
+        
+        integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
+        List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
+        if(totalComments < 40000){
+          postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
+        }else{
+            Integer numberOfQueriesRemaining = 45000-existingCaseList.size();
+            system.debug('numberOfQueriesRemainig'+numberOfQueriesRemaining);
+            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit :numberOfQueriesRemaining ]; 
+        }
         
         List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
@@ -160,9 +169,18 @@ public class InstagramAuthHelper {
     //Get all the mentions that are related to this business user id
     @Future(callout=true)
     public static void getAllMentionsFromInstaForUserId(){
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
         system.debug('existingCaseList==>'+existingCaseList);
-        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
+        //List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
+        integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
+        List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
+        if(totalComments < 40000){
+            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
+        }else{
+            Integer numberOfQueriesRemaining = 45000-existingCaseList.size();
+            system.debug('numberOfQueriesRemainig'+numberOfQueriesRemaining);
+            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit :numberOfQueriesRemaining ]; 
+        }
         
         List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
@@ -294,9 +312,20 @@ public class InstagramAuthHelper {
         String hashTagId = getHashtagIdFromInsta(hashtagName);
         system.debug('hashTagId'+hashTagId);
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
         system.debug('existingCaseList==>'+existingCaseList);
-        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
+        //List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
+        
+        integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
+        List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
+        if(totalComments < 40000){
+            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
+        }else{
+            Integer numberOfQueriesRemaining = 45000-existingCaseList.size();
+            system.debug('numberOfQueriesRemainig'+numberOfQueriesRemaining);
+            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit :numberOfQueriesRemaining ]; 
+        }
+        
         
         List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();

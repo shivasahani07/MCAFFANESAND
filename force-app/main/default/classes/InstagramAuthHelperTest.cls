@@ -21,6 +21,7 @@ public class InstagramAuthHelperTest {
         Case caseRec = new Case();
         caseRec.Post_Id__c = '17841405793087218';
         caseRec.RecordTypeId = caseRecordTypeId;
+        caseRec.Origin = 'Instagram';
         insert caserec;
         
         Post_Comments__c postComment = new Post_Comments__c(); 
@@ -61,6 +62,7 @@ public class InstagramAuthHelperTest {
             Subject = 'Test Case',
             Description = 'Test description',
             Post_Id__c = '12345',
+            Origin = 'Instagram',
             recordtypeId = caseRecordTypeId // Make sure to use an actual Record Type Id
         );
         insert testCase;
