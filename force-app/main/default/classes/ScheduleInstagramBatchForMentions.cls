@@ -1,5 +1,6 @@
 public class ScheduleInstagramBatchForMentions implements schedulable {
     public void execute(SchedulableContext sc){
-        InstagramAuthHelper.getAllMentionsFromInstaForUserId();
+       InstagramMentionCreationBatch batch = new InstagramMentionCreationBatch();
+       Database.executeBatch(batch);
     }
 }

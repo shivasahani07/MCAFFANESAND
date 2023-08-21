@@ -47,9 +47,9 @@
                     
                     <br/>
                     <div class="slds-text-heading_medium">
-                        Post Comments
-                        <br/>
                         Click here to see the Insta Post : <lightning:formattedUrl value="{!v.urlToPost}" label="POST" target="_blank" />
+                        <br/><br/>
+                        <lightning:button variant="brand" label="Refresh Comments"  onclick="{!c.refreshFeed}" />
                     </div>
                     <br/>
                     

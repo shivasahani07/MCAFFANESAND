@@ -12,4 +12,5 @@ public class InstagramUtilityTestMock implements HttpCalloutMock {
         
         return response;
     }
+    
 }

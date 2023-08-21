@@ -20,30 +20,22 @@ public class InstagramAuthHelper {
     //Get all the posts that are related to this business user id
     @Future(callout=true)
     public static void getAllPostsFromInstaForUserId(){
+        List<case> insertedCaseList 										= new List<case>();
+        List<Post_Comments__c> newpostCommentList                           = new List<Post_Comments__c>();
+        List<Post_Comments__c> newpostCommentForExistingPosts               = new List<Post_Comments__c>();
+        List<Post_Comments__c> postCommentsForExistingPostsToBeInserted     = new List<Post_Comments__c>();
+        List<Post_Comments__c> postCommentListToBeUpdated                   = new List<Post_Comments__c>();
+        List<Id> caseIdsToBeUpdated                                         = new List<Id>();
+        map<String,List<Post_Comments__c>> commentsOnPostByPostId           = new map<String,List<Post_Comments__c>>();
+        map<String,String> caseIdByPostId                                   = new map<String,String>();
+        map<String,String> postCommentIdByPostId                            = new map<String,String>();
+        map<String,String> caseIdByPostCommentId                            = new map<String,String>();
+        List<String> casePostIds                                            = new List<String>();
+        
         List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
-        system.debug('existingCaseList==>'+existingCaseList);
-        
-        integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
-        if(totalComments < 40000){
-          postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
-        }else{
-            Integer numberOfQueriesRemaining = 45000-existingCaseList.size();
-            system.debug('numberOfQueriesRemainig'+numberOfQueriesRemaining);
-            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit :numberOfQueriesRemaining ]; 
-        }
-        
-        List<case> insertedCaseList = new List<case>();
-        List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
-        List<Post_Comments__c> postCommentListToBeUpdated         = new List<Post_Comments__c>();
-        List<Id> caseIdsToBeUpdated                               = new List<Id>();
-        map<String,List<Post_Comments__c>> commentsOnPostByPostId = new map<String,List<Post_Comments__c>>();
-        map<String,String> caseIdByPostId                         = new map<String,String>();
-        map<String,String> postCommentIdByPostId                  = new map<String,String>();
-        map<String,String> caseIdByPostCommentId                  = new map<String,String>();
-        List<String> casePostIds                                  = new List<String>();
-        
-        
+        postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
+    
         for(Post_Comments__c postCommRec : postCommentDataList){
             postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
             caseIdByPostCommentId.put(postCommRec.Comment_Id__c,postCommRec.Case__c);
@@ -62,11 +54,10 @@ public class InstagramAuthHelper {
             if(!commentsOnPostByPostId.keyset().contains(caseRec.Post_Id__c)){
                 commentsOnPostByPostId.put(caseRec.Post_Id__c,postCommNewList);
             }
-            
         }
         system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/media';
-        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,shortcode,timestamp,username,comments{id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
+        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,shortcode,timestamp,username,comments.limit(25){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
         Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
         String fullUrl = endpointUrl + '?' + fieldsParam + '&access_token=' + accessToken;
         
@@ -101,7 +92,6 @@ public class InstagramAuthHelper {
                     insert newcase;
                     insertedCaseList.add(newcase);
                 }
-                System.debug('postInfo.comments  If == >'+postInfo.comments );
                 if((postInfo.comments != null)){
                     if(newcase.Id != null){
                         for(FacebookApiResponse.CommentData postInfoRec : postInfo.comments.data){
@@ -113,7 +103,7 @@ public class InstagramAuthHelper {
                             commentRec.Post_comment_Time__c = postInfoRec.timestamp;
                             commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
                             commentRec.Post_Url__c	 = postInfo.permalink;
-                            postCommentList.add(commentRec);
+                            newpostCommentList.add(commentRec);
                         }      
                     }
                 }
@@ -136,11 +126,9 @@ public class InstagramAuthHelper {
                                 commentRec.Post_comment_Time__c = postInfoRec.timestamp;
                                 commentRec.Post_Url__c	 = postInfo.permalink;
                                 commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                                system.debug('replies are'+postInfoRec.replies);
-                                postCommentList.add(commentRec);
+                                newpostCommentForExistingPosts.add(commentRec);
                             }else{
                                 //This will come here comments have to be updated..
-                                system.debug('replies are'+postInfoRec.replies);
                                 Post_Comments__c commentRec = new Post_Comments__c();
                                 commentRec.Id = postCommentIdByPostId.get(postInfoRec.Id);
                                 if(caseIdByPostCommentId.ContainsKey(postInfoRec.Id)){
@@ -148,7 +136,6 @@ public class InstagramAuthHelper {
                                 }
                                 commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
                                 postCommentListToBeUpdated.add(commentRec);
-                                
                             }
                         }
                     }
@@ -157,30 +144,31 @@ public class InstagramAuthHelper {
                 }
             }
         }
-        system.debug('postCommentList'+postCommentList);
-        system.debug('postCommentList'+postCommentList.size());
-        system.debug('insertedCaseList'+insertedCaseList.size());
-        system.debug('These cases have new comments do have a look'+insertedCaseList.size());
+      
+        for(Post_Comments__c postCommRec : newpostCommentForExistingPosts){
+            if(postCommentIdByPostId.keySet().contains(postCommRec.Comment_Id__c)){
+                
+            }else{
+                postCommentsForExistingPostsToBeInserted.add(postCommRec);
+            }
+        }
         
-        Database.insert(postCommentList, false);
-        Database.update(postCommentListToBeUpdated,false);
+        
+        system.debug('These cases have new comments do have a look'+insertedCaseList.size());
+        //This is for new Posts that are inserted :
+        if(postCommentsForExistingPostsToBeInserted.size() > 0){
+            Database.insert(postCommentsForExistingPostsToBeInserted, false);    
+        }
+        
+        if(postCommentListToBeUpdated.size() > 0){
+            Database.update(postCommentListToBeUpdated,false);
+        }
+        
     }
 
     //Get all the mentions that are related to this business user id
     @Future(callout=true)
     public static void getAllMentionsFromInstaForUserId(){
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
-        system.debug('existingCaseList==>'+existingCaseList);
-        //List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
-        integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
-        List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
-        if(totalComments < 40000){
-            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
-        }else{
-            Integer numberOfQueriesRemaining = 45000-existingCaseList.size();
-            system.debug('numberOfQueriesRemainig'+numberOfQueriesRemaining);
-            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit :numberOfQueriesRemaining ]; 
-        }
         
         List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
@@ -191,6 +179,22 @@ public class InstagramAuthHelper {
         map<String,String> postCommentIdByPostId                  = new map<String,String>();
         map<String,String> caseIdByPostCommentId                  = new map<String,String>();
         List<String> casePostIds                                  = new List<String>();
+        List<Post_Comments__c> newpostCommentList                           = new List<Post_Comments__c>();
+        List<Post_Comments__c> newpostCommentForExistingPosts               = new List<Post_Comments__c>();
+        List<Post_Comments__c> postCommentsForExistingPostsToBeInserted     = new List<Post_Comments__c>();
+        
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        system.debug('existingCaseList==>'+existingCaseList);
+        integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
+        List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
+        if(totalComments < 40000){
+            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
+        }else{
+            Integer numberOfQueriesRemaining = 45000-existingCaseList.size();
+            system.debug('numberOfQueriesRemainig'+numberOfQueriesRemaining);
+            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit :numberOfQueriesRemaining ]; 
+        }
+        
         
         
         for(Post_Comments__c postCommRec : postCommentDataList){
@@ -215,7 +219,7 @@ public class InstagramAuthHelper {
         system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         
         String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/tags';
-        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,timestamp,username,comments{id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
+        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,timestamp,username,comments.limit(25){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
         String fullUrl = endpointUrl + '?' + fieldsParam + '&access_token=' + accessToken;
         
         Http http = new Http();
@@ -307,6 +311,7 @@ public class InstagramAuthHelper {
     }   
     
     @Future(callout=true)
+
     public static void getPostDetailsByHashTagId(String hashtagName){
         List<Case> caseList = new List<Case>();
         String hashTagId = getHashtagIdFromInsta(hashtagName);

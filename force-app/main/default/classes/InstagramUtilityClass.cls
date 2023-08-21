@@ -59,103 +59,101 @@ public class InstagramUtilityClass {
     }
     
     //Pass this method the media id and all the details related to post will be fetched.
-    public static void getMediaDetailsFromMediaId(String mediaId){
+    public static string getMediaDetailsFromMediaId(String mediaId){
         
         List<Post_Comments__c> postCommentList = new List<Post_Comments__c>();
         List<Post_Comments__c> postCommentListToBeUpdated = new List<Post_Comments__c>();
         map<String,List<Post_Comments__c>> commentsOnPostByPostId = new map<String,List<Post_Comments__c>>();
         map<String,String> caseIdByPostId = new map<String,String>();
         map<String,String> postCommentIdByPostId = new map<String,String>();
-        List<Case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case];
+        List<Case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where Post_Id__c = :mediaId];
         
-        List<String> casePostIds = new List<String>();
-        for(Case caseRec : existingCaseList){
-            commentsOnPostByPostId.put(caseRec.Post_Id__c,caseRec.Post_Comments__r);
-            caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
-            for(Post_Comments__c pocRec : caseRec.Post_Comments__r){
-                postCommentIdByPostId.put(pocRec.Comment_Id__c,pocRec.Id);
+        try{
+            List<String> casePostIds = new List<String>();
+            for(Case caseRec : existingCaseList){
+                commentsOnPostByPostId.put(caseRec.Post_Id__c,caseRec.Post_Comments__r);
+                caseIdByPostId.put(caseRec.Post_Id__c,caseRec.Id);
+                for(Post_Comments__c pocRec : caseRec.Post_Comments__r){
+                    postCommentIdByPostId.put(pocRec.Comment_Id__c,pocRec.Id);
+                }
             }
-        }
-        
-        String endpointUrl = basicUrl+mediaId+'?fields=media_url,comments_count,permalink,caption,media_type,shortcode,timestamp,username,comments{id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}';
-        Map<String, String> queryParams = new Map<String, String>();
-        Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+accessToken};
-            HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(endpointUrl, queryParams, headers);
-        InstagramMediaResponseWrapper postInfo = (InstagramMediaResponseWrapper) JSON.deserialize(response.getBody(), InstagramMediaResponseWrapper.class);
-        
-        system.debug('responseWrapper'+postInfo);
-        //for(InstagramMediaResponseWrapper.DataWrapper postInfo : responseWrapper.data){
-        system.debug('responseWrapper'+postInfo.Id);
-        if(!commentsOnPostByPostId.keyset().contains(postInfo.Id)){
-            Case newCase = new case();
-            newCase.Related_to__c = postInfo.username;
-            newCase.Origin = 'Instagram';
-            newCase.Post_Id__c = postInfo.id;
-            newcase.RecordTypeId = caseRecordTypeId;
-            newcase.Created_Time__c = String.valueOf(postInfo.timestamp);
-            newcase.POST_URL__c = postInfo.permalink;
-            if((postInfo.comments != null)){
-                newcase.Comments_JSON__c = string.valueOf(postInfo.comments.data);
-            }
-            newcase.OwnerId = userinfo.getuserId();
-            newcase.Priority = 'High';
-            newcase.Type_of_Post__c = 'Post';
-            newcase.Subject = 'This case is coming from Instagram';
-            newcase.Description = postInfo.caption;
-            insert newcase;
-            system.debug('postInfo.comments'+postInfo.comments);
             
-            if(Test.isRunningTest()){
-                postInfo = InstagramUtilityTest.getCommentWrapper(postInfo);
+            system.debug('commentsOnPostByPostId--->'+commentsOnPostByPostId);
+            //system.debug('response-->'+response);
+            
+            String endpointUrl = basicUrl+mediaId+'?fields=media_url,comments_count,permalink,caption,media_type,shortcode,timestamp,username,comments{id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}';
+            Map<String, String> queryParams = new Map<String, String>();
+            Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+accessToken};
+            String jsonResponse = '';    
+            InstagramMediaResponseWrapper postInfo = new InstagramMediaResponseWrapper();   
+            if(test.isRunningTest()){
+                jsonResponse = '{"id": "17841405793087218", "media_url": "https://www.example.com/image.jpg", "comments": { "data": [{"id": "17851087209098192", "text": "Awesome!", "username": "user1", "timestamp": "2023-07-29T12:40:00+0000"}] } }';
+                postInfo = (InstagramMediaResponseWrapper) JSON.deserialize(jsonResponse, InstagramMediaResponseWrapper.class);
+            }else{
+                HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(endpointUrl, queryParams, headers);
+                postInfo = (InstagramMediaResponseWrapper) JSON.deserialize(response.getBody(), InstagramMediaResponseWrapper.class);
             }
-            if((postInfo.comments != null)){
-                for(InstagramMediaResponseWrapper.cls_data postInfoRec : postInfo.comments.data){
-                    Post_Comments__c commentRec = new Post_Comments__c();
-                    commentRec.Case__c = newcase.Id;
-                    commentRec.Comment__c = postInfoRec.text;
-                    commentRec.Comment_Id__c = postInfoRec.id;
-                    commentRec.Commented_By__c = postInfoRec.username;
-                    commentRec.Post_comment_Time__c = postInfoRec.timestamp;
-                    commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                    commentRec.Post_Url__c	 = postInfo.permalink;
-                    system.debug('replies are'+postInfoRec.replies);
-                    postCommentList.add(commentRec);
-                }    
-            }
-        }else{
-            if(postInfo.comments != null){
-                for(InstagramMediaResponseWrapper.cls_data postInfoRec : postInfo.comments.data){
-                    if(commentsOnPostByPostId.containsKey(postInfo.Id)){
-                        List<String> postCommentIds = new List<String>();
-                        for(Post_Comments__c poCom :  commentsOnPostByPostId.get(postInfo.Id)){
-                            postCommentIds.add(poCom.Comment_Id__c);
-                        }
-                        if(!postCommentIds.contains(postInfoRec.id)){
-                            Post_Comments__c commentRec = new Post_Comments__c();
-                            commentRec.Case__c = caseIdByPostId.get(postInfo.Id);
-                            commentRec.Comment__c = postInfoRec.text;
-                            commentRec.Comment_Id__c = postInfoRec.id;
-                            commentRec.Commented_By__c = postInfoRec.username;
-                            commentRec.Post_comment_Time__c = postInfoRec.timestamp;
-                            commentRec.Post_Url__c	 = postInfo.permalink;
-                            commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                            system.debug('replies are'+postInfoRec.replies);
-                            postCommentList.add(commentRec);
-                        }else{
-                            system.debug('replies are'+postInfoRec.replies);
-                            Post_Comments__c commentRec = new Post_Comments__c();
-                            commentRec.Id = postCommentIdByPostId.get(postInfoRec.id);
-                            commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                            postCommentListToBeUpdated.add(commentRec);
+                
+           
+            if(commentsOnPostByPostId.keyset().contains(postInfo.Id)){
+                if(postInfo.comments != null){
+                    for(InstagramMediaResponseWrapper.cls_data postInfoRec : postInfo.comments.data){
+                        if(commentsOnPostByPostId.containsKey(postInfo.Id)){
+                            List<String> postCommentIds = new List<String>();
+                            for(Post_Comments__c poCom :  commentsOnPostByPostId.get(postInfo.Id)){
+                                postCommentIds.add(poCom.Comment_Id__c);
+                            }
+                            if(!postCommentIds.contains(postInfoRec.id)){
+                                Post_Comments__c commentRec = new Post_Comments__c();
+                                commentRec.Case__c = caseIdByPostId.get(postInfo.Id);
+                                commentRec.Comment__c = postInfoRec.text;
+                                commentRec.Comment_Id__c = postInfoRec.id;
+                                commentRec.Commented_By__c = postInfoRec.username;
+                                commentRec.Post_comment_Time__c = postInfoRec.timestamp;
+                                commentRec.Post_Url__c	 = postInfo.permalink;
+                                commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
+                                system.debug('replies are'+postInfoRec.replies);
+                                postCommentList.add(commentRec);
+                            }else{
+                                system.debug('replies are'+postInfoRec.replies);
+                                Post_Comments__c commentRec = new Post_Comments__c();
+                                commentRec.Id = postCommentIdByPostId.get(postInfoRec.id);
+                                commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
+                                postCommentListToBeUpdated.add(commentRec);
+                            }
                         }
                     }
+                }else{
+                    system.debug('postInfo.comments'+postInfo.comments);
                 }
-            }else{
-                system.debug('postInfo.comments'+postInfo.comments);
             }
+            system.debug('postCommentList'+postCommentList);
+            system.debug('postCommentListToBeUpdated'+postCommentListToBeUpdated);
+            List<Post_Comments__c> newComments = new   List<Post_Comments__c> ();
+            if(postCommentList.size() > 0){
+                List<Post_Comments__c> postCommentData = [Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__r.Post_Id__c = :mediaId];
+                if(postCommentData.size() > 15){
+                    delete postCommentData;
+                    insert postCommentList;
+                }else{
+                    for (Integer i = 0; i<= 10; i++) {
+                        newComments.add(postCommentList[i]);
+                        insert newComments;
+                    }
+                }
+            }
+            if(postCommentListToBeUpdated.size() > 0){
+                update postCommentListToBeUpdated;
+            }
+            return 'Success';
+            
+        }catch(Exception e){
+            system.debug('Error message'+e.getMessage());
+            return e.getMessage();    
         }
-        insert postCommentList;
-        update postCommentListToBeUpdated;
+        
+        
+        
     }
     
     //Pass this method the Comment id and the media id will be fetched.
@@ -207,7 +205,7 @@ public class InstagramUtilityClass {
         mail.setSaveAsActivity(true);
         mail.setHtmlBody(htmlBody);
         if(Test.isRunningTest()){
-        	mail.setSaveAsActivity(false);    
+            mail.setSaveAsActivity(false);    
         }
         
         mails.add(mail);
