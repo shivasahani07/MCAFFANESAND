@@ -78,7 +78,7 @@ public class twitterCompController {
             HttpResponse response = http.send(request);
             
             // Process the response
-            if (response.getStatusCode() == 200) {
+            if (response.getStatusCode() == 200 || response.getStatusCode() == 201) {
                 String responseBody = response.getBody();
                 System.debug('Response Body: ' + responseBody);
             } else {

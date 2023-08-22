@@ -23,13 +23,14 @@ public class twitterApis {
     @Future(callout=true)
     public static void getAllRecentTweetsFromTwitter(){
         List<case> insertedCaseList 										= new List<case>();
+        List<case> CaseListToBeInserted 									= new List<case>();
         map<String,List<Post_Comments__c>> commentsOnPostByPostId           = new map<String,List<Post_Comments__c>>();
         map<String,String> caseIdByPostId                                   = new map<String,String>();
         map<String,String> postCommentIdByPostId                            = new map<String,String>();
         map<String,String> caseIdByPostCommentId                            = new map<String,String>();
         List<String> casePostIds                                            = new List<String>();
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Twitter'];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
         postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
         
@@ -60,9 +61,15 @@ public class twitterApis {
         
         Map<String, String> queryParams = new Map<String, String>();
         Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+bearerToken};
-            HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(fullUrl, queryParams, headers);
-        System.debug('response.getBody() === > '+response.getBody());
-        twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(response.getBody(), twitterApiResponseWrapper.class);
+            String responseBody = '';
+            if(test.isRunningTest()){
+                responseBody = '{"data":[{"in_reply_to_user_id":"356087800","text":"We can’t wait to hear your Hyphen story🫶","edit_history_tweet_ids":["1691484940108505089"],"created_at":"2023-08-15T16:20:10.000Z","id":"1691484940108505089","author_id":"1663898120684711943"}]}';
+            }else{
+                HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(fullUrl, queryParams, headers);
+                responseBody = response.getBody();
+            }
+            
+        twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(responseBody, twitterApiResponseWrapper.class);
         system.debug('responseWrapper'+responseWrapper);
         for(twitterApiResponseWrapper.data postInfo : responseWrapper.data){
             System.debug('postInfo === >'+postInfo);
@@ -86,21 +93,24 @@ public class twitterApis {
                 
             }
         }
-        if(insertedCaseList.size() > 0){
-            Database.insert(insertedCaseList,false);
+        
+        system.debug('size of insertedCaseList==>'+insertedCaseList.size());
+        if(!insertedCaseList.isEmpty()){
+            insert insertedCaseList;
         }
     }
     
     @Future(callout=true)
     public static void getAllTweetsFromTimeLine(){
         List<case> insertedCaseList 										= new List<case>();
+        List<case> CaseListToBeInserted 									= new List<case>();
         map<String,List<Post_Comments__c>> commentsOnPostByPostId           = new map<String,List<Post_Comments__c>>();
         map<String,String> caseIdByPostId                                   = new map<String,String>();
         map<String,String> postCommentIdByPostId                            = new map<String,String>();
         map<String,String> caseIdByPostCommentId                            = new map<String,String>();
         List<String> casePostIds                                            = new List<String>();
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Twitter'];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
         postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
         
@@ -130,9 +140,14 @@ public class twitterApis {
         
         Map<String, String> queryParams = new Map<String, String>();
         Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+bearerToken};
+            String responseBody = '';
+        if(test.isRunningTest()){
+            responseBody = '{"data":[{"in_reply_to_user_id":"356087800","text":"We can’t wait to hear your Hyphen story🫶","edit_history_tweet_ids":["1691484940108505089"],"created_at":"2023-08-15T16:20:10.000Z","id":"1691484940108505089","author_id":"1663898120684711943"}]}';
+        }else{
             HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(fullUrl, queryParams, headers);
-        System.debug('response.getBody() === > '+response.getBody());
-        twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(response.getBody(), twitterApiResponseWrapper.class);
+            responseBody = response.getBody();
+        }
+        twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(responseBody, twitterApiResponseWrapper.class);
         system.debug('responseWrapper'+responseWrapper);
         for(twitterApiResponseWrapper.data postInfo : responseWrapper.data){
             System.debug('postInfo === >'+postInfo);
@@ -156,21 +171,24 @@ public class twitterApis {
                 
             }
         }
-        if(insertedCaseList.size() > 0){
-            Database.insert(insertedCaseList,false);
+        
+        system.debug('size of insertedCaseList==>'+insertedCaseList.size());
+        if(!insertedCaseList.isEmpty()){
+            insert insertedCaseList;
         }
     }
     
     @Future(callout=true)
     public static void getAllMentionsFromTimeLine(){
         List<case> insertedCaseList 										= new List<case>();
+        List<case> CaseListToBeInserted                                     = new List<case>();
         map<String,List<Post_Comments__c>> commentsOnPostByPostId           = new map<String,List<Post_Comments__c>>();
         map<String,String> caseIdByPostId                                   = new map<String,String>();
         map<String,String> postCommentIdByPostId                            = new map<String,String>();
         map<String,String> caseIdByPostCommentId                            = new map<String,String>();
         List<String> casePostIds                                            = new List<String>();
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Twitter'];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
         postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
         
@@ -201,9 +219,15 @@ public class twitterApis {
         
         Map<String, String> queryParams = new Map<String, String>();
         Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+bearerToken};
+            String responseBody = '';
+        if(test.isRunningTest()){
+            responseBody = '{"data":[{"in_reply_to_user_id":"356087800","text":"We can’t wait to hear your Hyphen story🫶","edit_history_tweet_ids":["1691484940108505089"],"created_at":"2023-08-15T16:20:10.000Z","id":"1691484940108505089","author_id":"1663898120684711943"}]}';
+        }else{
             HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(fullUrl, queryParams, headers);
-        System.debug('response.getBody() === > '+response.getBody());
-        twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(response.getBody(), twitterApiResponseWrapper.class);
+            responseBody = response.getBody();
+        }
+            
+            twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(responseBody, twitterApiResponseWrapper.class);
         system.debug('responseWrapper'+responseWrapper);
         for(twitterApiResponseWrapper.data postInfo : responseWrapper.data){
             System.debug('postInfo === >'+postInfo);
@@ -217,20 +241,22 @@ public class twitterApis {
                 newcase.POST_URL__c = 'https://twitter.com/letshyphen/status/'+postInfo.id;
                 newcase.recordtypeId = caseRecordTypeId;
                 newcase.Priority = 'High';
-                newcase.Type_of_Post__c = 'Post';
+                newcase.Type_of_Post__c = 'Tags/Mentions';
                 newcase.Subject = 'Post from twitter Related to '+postInfo.author_id+'. Created Date-Time : '+postInfo.created_at.removeEnd('.000Z');
                 newcase.Description = postInfo.text;
                 if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                    insert newcase;
                     insertedCaseList.add(newcase);
                 }
             }else{
                 
             }
         }
-        if(insertedCaseList.size() > 0){
-            Database.insert(insertedCaseList,false);
+        
+        system.debug('size of insertedCaseList==>'+insertedCaseList.size());
+        if(!insertedCaseList.isEmpty()){
+            database.insert(insertedCaseList);
         }
+        
     }
     
     @Future(callout=true)

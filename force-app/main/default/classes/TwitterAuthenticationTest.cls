@@ -48,7 +48,7 @@ public class TwitterAuthenticationTest {
         Test.setMock(HttpCalloutMock.class, mock);
         // Call the getAccessToken method
         Test.startTest();
-        String refreshedAccessToken = TwitterAuthentication.getRefreshedToken();
+        TwitterAuthentication.getRefreshedToken();
         Test.stopTest();
         // Verify that the custom setting was updated with the new access token
     }    
