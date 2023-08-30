@@ -115,50 +115,12 @@ public class instaComponentController {
         return instaWrapperList;
     }
     @AuraEnabled
-    public Static List<instaWrapper> getUpdatedComments(String recordId){
+    public Static Void getUpdatedComments(String recordId){
         system.debug('recordId=======>'+recordId);
         Case CaseRecord = [Select id , Post_Id__c from case where id = :recordId];
         List<instaWrapper> instaWrapperList = new List<instaWrapper>();
-        if(InstagramUtilityClass.getMediaDetailsFromMediaId(CaseRecord.Post_Id__c) == 'Success'){
-            
-            List<Case> CaseDetails = [Select id,subject,Description,Type_of_Post__c,Caption__c,POST_URL__c,(Select Comment__c,Comment_Id__c,Replied_Comments__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where id = :recordId];
-            
-            for(Case caseRec : CaseDetails){
-                try{
-                    if(caseRec.Post_Comments__r.size() > 0){
-                        
-                        for(Post_Comments__c pcRec : caseRec.Post_Comments__r ){
-                            instaWrapper iw = new instaWrapper();
-                            iw.comment = pcRec.Comment__c;
-                            iw.CommentedBy = pcRec.Commented_By__c;
-                            iw.PostUrl = pcRec.Post_Url__c;
-                            iw.CommentId = pcRec.Comment_Id__c;
-                            pcRec.Post_comment_Time__c = pcRec.Post_comment_Time__c.removeEnd('+0000');
-                            List<String> DateTimeData = pcRec.Post_comment_Time__c.split('T');
-                            system.debug('DateTimeData'+DateTimeData);
-                            iw.postDate = DateTimeData[0];
-                            iw.postTime = DateTimeData[1];
-                            iw.postType = caseRec.Type_of_Post__c;
-                            iw.postCaption = caseRec.Description;
-                            instaWrapperList.add(iw);
-                        }
-                    }else{
-                        instaWrapper iw = new instaWrapper();
-                        iw.PostUrl = caseRec.Post_Url__c;
-                        iw.postCaption = caseRec.Description;
-                        iw.postType = caseRec.Type_of_Post__c;
-                        instaWrapperList.add(iw);
-                    }
-                }
-                catch(exception e){
-                    system.debug('Error is '+e.getMessage());
-                    return instaWrapperList;  
-                }
-            }
-        }else{
-            return instaWrapperList;
-        }
-        return instaWrapperList;
+        InstagramUtilityClass.getMediaDetailsFromMediaId(CaseRecord.Post_Id__c);
+        
     }
     @AuraEnabled
     public Static void replyToComment(String commentId,String commentMessage){

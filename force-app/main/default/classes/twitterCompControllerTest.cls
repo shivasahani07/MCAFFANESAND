@@ -1,6 +1,6 @@
 @isTest
 public class twitterCompControllerTest {
-     @isTest
+    @isTest
     static void testGetCaseDetails() {
         // Create test data
         Case testCase = new Case(
@@ -20,10 +20,10 @@ public class twitterCompControllerTest {
         // Call the method to test
         List<twitterCompController.twitterWrapper> result = twitterCompController.getCaseDetails(testCase.Id);
         
-       
+        
     }
     
-      @isTest
+    @isTest
     static void testReplyToTweetOnTwittter() {
         // Create test data
         Case testCase = new Case(

@@ -14,11 +14,11 @@ public class InstagramAuthHelper {
     private static String accessToken                   = fap.accessToken__c;
     private static String basicUrl                      = fap.basicUrl__c;
     private static String businessUserId                = fap.businessUserId__c;
+    private static String hashtagName                   = fap.HashTag__c;
     //Getting the record Type Id
     private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
     
     //Get all the posts that are related to this business user id
-    @Future(callout=true)
     public static void getAllPostsFromInstaForUserId(){
         List<case> insertedCaseList 										= new List<case>();
         List<Post_Comments__c> newpostCommentList                           = new List<Post_Comments__c>();
@@ -55,9 +55,8 @@ public class InstagramAuthHelper {
                 commentsOnPostByPostId.put(caseRec.Post_Id__c,postCommNewList);
             }
         }
-        system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/media';
-        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,shortcode,timestamp,username,comments.limit(25){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
+        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,shortcode,timestamp,username,comments.limit(50){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
         Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
         String fullUrl = endpointUrl + '?' + fieldsParam + '&access_token=' + accessToken;
         
@@ -65,13 +64,23 @@ public class InstagramAuthHelper {
         HttpRequest request = new HttpRequest();
         request.setEndpoint(fullUrl);
         request.setMethod('GET');
-       
-        HttpResponse response = http.send(request);
-        System.debug('response.getBody() === > '+response.getBody());
-        FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(response.getBody(), FacebookApiResponse.class);
-        system.debug('responseWrapper'+responseWrapper);
+        String body = '';
+        if (test.isRunningTest()){
+            body = '{"data":[{"id":"17841405793087218","username":"example_user","timestamp":"2023-07-29T12:34:56+0000","caption":"This is an amazing photo!","media_type":"IMAGE","media_url":"https://www.example.com/image.jpg","permalink":"https://www.instagram.com/p/ABC123/","comments_count":5,"comments":{"data":[{"id":"17851087209098192","text":"Awesome!","username":"user1","timestamp":"2023-07-29T12:40:00+0000"},{"id":"17851087209098193","text":"Great shot!","username":"user2","timestamp":"2023-07-29T12:42:30+0000"},{"id":"17851087209098194","text":"Beautiful!","username":"user3","timestamp":"2023-07-29T12:45:15+0000"},{"id":"17851087209098195","text":"Nice!","username":"user4","timestamp":"2023-07-29T12:50:20+0000"},{"id":"17851087209098196","text":"Love it!","username":"user5","timestamp":"2023-07-29T13:00:00+0000"}],"paging":{"cursors":{"before":"cursor_before","after":"cursor_after"},"next":"https://www.instagram.com/p/ABC123/comments?cursor=cursor_after"}}},{"id":"17841405793087219","username":"another_user","timestamp":"2023-07-29T14:30:45+0000","caption":"Sunset vibes!","media_type":"VIDEO","media_url":"https://www.example.com/video.mp4","permalink":"https://www.instagram.com/p/XYZ456/","comments_count":2,"comments":{"data":[{"id":"17851087209098197","text":"Amazing video!","username":"user6","timestamp":"2023-07-29T14:40:00+0000"},{"id":"17851087209098198","text":"Beautiful sunset!","username":"user7","timestamp":"2023-07-29T14:45:30+0000"}],"paging":{"cursors":{"before":"cursor_before","after":"cursor_after"},"next":"https://www.instagram.com/p/XYZ456/comments?cursor=cursor_after"}}}],"paging":{"cursors":{"before":"cursor_before","after":"cursor_after"},"next":"https://www.instagram.com/user123/media?cursor=cursor_after"}}';
+        }else{
+            HttpResponse response = http.send(request);
+            body = response.getBody();
+        }
+        FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(body, FacebookApiResponse.class);
+        system.debug('responseWrapper'+responseWrapper.data.size());
+        if( responseWrapper.data.size() == 50){
+            system.debug('50 cases are there lets proceed'+responseWrapper.paging.cursors.after);
+            Instagram_Api_Details__c instaSetting = Instagram_Api_Details__c.getOrgDefaults();
+            instaSetting.Id = instaSetting.Id;
+            instaSetting.next_Pagination_Post_Token__c = responseWrapper.paging.cursors.after;
+            update instaSetting;
+        }
         for(FacebookApiResponse.DataWrapper postInfo : responseWrapper.data){
-            System.debug('postInfo === >'+postInfo);
             if(!commentsOnPostByPostId.keyset().contains(postInfo.Id)){
                 Case newCase = new case();
                 newCase.Related_to__c = postInfo.username;
@@ -167,7 +176,6 @@ public class InstagramAuthHelper {
     }
 
     //Get all the mentions that are related to this business user id
-    @Future(callout=true)
     public static void getAllMentionsFromInstaForUserId(){
         
         List<case> insertedCaseList = new List<case>();
@@ -219,7 +227,7 @@ public class InstagramAuthHelper {
         system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         
         String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/tags';
-        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,timestamp,username,comments.limit(25){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
+        String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,timestamp,username,comments.limit(50){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
         String fullUrl = endpointUrl + '?' + fieldsParam + '&access_token=' + accessToken;
         
         Http http = new Http();
@@ -229,8 +237,14 @@ public class InstagramAuthHelper {
         
         HttpResponse response = http.send(request);
         FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(response.getBody(), FacebookApiResponse.class);
+        if( responseWrapper.data.size() == 50){
+            system.debug('50 cases are there lets proceed'+responseWrapper.paging.cursors.after);
+            Instagram_Api_Details__c instaSetting = Instagram_Api_Details__c.getOrgDefaults();
+            instaSetting.Id = instaSetting.Id;
+            instaSetting.next_Pagination_Mention_Token__c = responseWrapper.paging.cursors.after;
+            update instaSetting;
+        }
         
-        system.debug('responseWrapper'+responseWrapper);
         for(FacebookApiResponse.DataWrapper postInfo : responseWrapper.data){
             if(!commentsOnPostByPostId.keyset().contains(postInfo.Id)){
                 Case newCase = new case();
@@ -311,8 +325,7 @@ public class InstagramAuthHelper {
     }   
     
     @Future(callout=true)
-
-    public static void getPostDetailsByHashTagId(String hashtagName){
+    public static void getPostDetailsByHashTagId(){
         List<Case> caseList = new List<Case>();
         String hashTagId = getHashtagIdFromInsta(hashtagName);
         system.debug('hashTagId'+hashTagId);

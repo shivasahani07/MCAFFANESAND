@@ -5,6 +5,8 @@ public class twitterApiResponseWrapper{
         public String oldest_id{get;set;}
         public Integer result_count{get;set;}
         public String newest_id{get;set;}
+        public String next_token{get;set;}
+        public String previous_token{get;set;}
     }
     public class data{
         public String text{get;set;}

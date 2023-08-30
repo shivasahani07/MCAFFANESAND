@@ -65,13 +65,8 @@
         action.setCallback(this, function(response) {
             var state = response.getState();
             if (state === 'SUCCESS') {
-                console.log(serverresponse);
-                var serverresponse = response.getReturnValue();
-                component.set("v.tweetDescription",serverresponse[0].postCaption);
-                component.set("v.urlToPost",serverresponse[0].PostUrl);
-                component.set("v.typeOfPost",serverresponse[0].postType);
-                component.set("v.relatedCommentList",serverresponse);
                 component.set("v.showSpinner",false);
+                window.location.reload();
             }else{
                 component.set("v.showSpinner",false);
             }

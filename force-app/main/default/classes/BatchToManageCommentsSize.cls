@@ -1,3 +1,10 @@
+/*
+* Test Class name  : ManageBatchTestClass
+* created Date     : 29/07/2023
+* Created By       : shubham kumar
+* Last Modfied By  : shubham kumar
+* Descritpion      : This class executes the logic to delete all the duplicate cases.
+*/
 public class BatchToManageCommentsSize implements Database.Batchable<sObject>,Database.AllowsCallouts,Database.Stateful {
     
     private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();

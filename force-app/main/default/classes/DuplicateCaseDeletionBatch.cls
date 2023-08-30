@@ -1,10 +1,16 @@
+/*
+* Test Class name  : ManageBatchTestClass
+* created Date     : 29/07/2023
+* Created By       : shubham kumar
+* Last Modfied By  : shubham kumar
+* Descritpion      : This class executes the logic to delete all the duplicate cases.
+*/
 public class DuplicateCaseDeletionBatch implements Database.Batchable<sObject>,Database.AllowsCallouts,Database.Stateful{
     List<Case> ExistingCaseRecords = new List<Case>();
     private static Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
     
     public Database.QueryLocator start(Database.BatchableContext context) {
-        String origin = 'Instagram';
-        String query = 'Select id,subject,Description,Caption__c,Post_Id__c from case where Origin = :origin and recordTypeId = :caseRecordTypeId';
+        String query = 'Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId';
         return Database.getQueryLocator(query);
     }
     

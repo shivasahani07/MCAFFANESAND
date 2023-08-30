@@ -12,7 +12,7 @@ public class ManageBatchTestClass {
         );
         insert testCase;
         
-          for(integer i=0 ; i <= 52 ; i++){
+        for(integer i=0 ; i <= 52 ; i++){
             Post_Comments__c testComment = new Post_Comments__c(Case__c = testCase.Id,Comment__c = 'Test comment',Comment_Id__c = 'test_comment_id_123');    
             PostCommentsList.add(testComment);
         }

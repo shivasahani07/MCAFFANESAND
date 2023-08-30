@@ -11,6 +11,7 @@
             if (state === 'SUCCESS') {
                 var serverresponse = response.getReturnValue();
                 component.set("v.tweetDescription",serverresponse[0].postCaption);
+                component.set("v.tweetReply",serverresponse[0].comment);
                 component.set("v.urlToPost",serverresponse[0].PostUrl);
             }else{
                 

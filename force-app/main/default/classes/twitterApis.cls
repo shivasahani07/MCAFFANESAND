@@ -16,11 +16,10 @@ public class twitterApis {
     private static String basicUrl                      = fap.basicUrl__c;
     private static String businessUserId                = fap.businessUserId__c;
     private static String Mention                       = fap.Mention__c;
-    //Getting the record Type Id
     private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
     
     //Get all the posts that are related to this business user id
-    @Future(callout=true)
+   
     public static void getAllRecentTweetsFromTwitter(){
         List<case> insertedCaseList 										= new List<case>();
         List<case> CaseListToBeInserted 									= new List<case>();
@@ -62,14 +61,24 @@ public class twitterApis {
         Map<String, String> queryParams = new Map<String, String>();
         Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+bearerToken};
             String responseBody = '';
-            if(test.isRunningTest()){
-                responseBody = '{"data":[{"in_reply_to_user_id":"356087800","text":"We can’t wait to hear your Hyphen story🫶","edit_history_tweet_ids":["1691484940108505089"],"created_at":"2023-08-15T16:20:10.000Z","id":"1691484940108505089","author_id":"1663898120684711943"}]}';
-            }else{
-                HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(fullUrl, queryParams, headers);
-                responseBody = response.getBody();
-            }
+        if(test.isRunningTest()){
+            responseBody = '{"data":[{"in_reply_to_user_id":"356087800","text":"We can’t wait to hear your Hyphen story🫶","edit_history_tweet_ids":["1691484940108505089"],"created_at":"2023-08-15T16:20:10.000Z","id":"1691484940108505089","author_id":"1663898120684711943"}]}';
+        }else{
+            HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(fullUrl, queryParams, headers);
+            responseBody = response.getBody();
             
+        }
+        
         twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(responseBody, twitterApiResponseWrapper.class);
+        if( responseWrapper.data.size() == 50){
+            system.debug('50 cases are there lets proceed'+responseWrapper.data.size());
+            Twitter_Api_Details__c tweetSetting = Twitter_Api_Details__c.getOrgDefaults();
+            tweetSetting.Id = tweetSetting.Id;
+            tweetSetting.Next_Recent_Tweet_Pagination_Token__c = responseWrapper.meta.next_token;
+            update tweetSetting;
+        }
+        
+        
         system.debug('responseWrapper'+responseWrapper);
         for(twitterApiResponseWrapper.data postInfo : responseWrapper.data){
             System.debug('postInfo === >'+postInfo);
@@ -100,7 +109,6 @@ public class twitterApis {
         }
     }
     
-    @Future(callout=true)
     public static void getAllTweetsFromTimeLine(){
         List<case> insertedCaseList 										= new List<case>();
         List<case> CaseListToBeInserted 									= new List<case>();
@@ -148,6 +156,14 @@ public class twitterApis {
             responseBody = response.getBody();
         }
         twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(responseBody, twitterApiResponseWrapper.class);
+        if( responseWrapper.data.size() == 50){
+            system.debug('50 cases are there lets proceed'+responseWrapper.data.size());
+            Twitter_Api_Details__c tweetSetting = Twitter_Api_Details__c.getOrgDefaults();
+            tweetSetting.Id = tweetSetting.Id;
+            tweetSetting.Next_Timeline_Pagination_Token__c = responseWrapper.meta.next_token;
+            update tweetSetting;
+        }
+        
         system.debug('responseWrapper'+responseWrapper);
         for(twitterApiResponseWrapper.data postInfo : responseWrapper.data){
             System.debug('postInfo === >'+postInfo);
@@ -178,7 +194,6 @@ public class twitterApis {
         }
     }
     
-    @Future(callout=true)
     public static void getAllMentionsFromTimeLine(){
         List<case> insertedCaseList 										= new List<case>();
         List<case> CaseListToBeInserted                                     = new List<case>();
@@ -223,11 +238,21 @@ public class twitterApis {
         if(test.isRunningTest()){
             responseBody = '{"data":[{"in_reply_to_user_id":"356087800","text":"We can’t wait to hear your Hyphen story🫶","edit_history_tweet_ids":["1691484940108505089"],"created_at":"2023-08-15T16:20:10.000Z","id":"1691484940108505089","author_id":"1663898120684711943"}]}';
         }else{
+            
             HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(fullUrl, queryParams, headers);
             responseBody = response.getBody();
         }
-            
-            twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(responseBody, twitterApiResponseWrapper.class);
+        
+        twitterApiResponseWrapper responseWrapper = (twitterApiResponseWrapper) JSON.deserialize(responseBody, twitterApiResponseWrapper.class);
+        if( responseWrapper.data.size() == 50){
+            system.debug('50 cases are there lets proceed'+responseWrapper.data.size());
+            Twitter_Api_Details__c tweetSetting = Twitter_Api_Details__c.getOrgDefaults();
+            tweetSetting.Id = tweetSetting.Id;
+            tweetSetting.Next_Mention_Pagination_Token__c = responseWrapper.meta.next_token;
+            update tweetSetting;
+        }
+        
+        
         system.debug('responseWrapper'+responseWrapper);
         for(twitterApiResponseWrapper.data postInfo : responseWrapper.data){
             System.debug('postInfo === >'+postInfo);
@@ -256,7 +281,6 @@ public class twitterApis {
         if(!insertedCaseList.isEmpty()){
             database.insert(insertedCaseList);
         }
-        
     }
     
     @Future(callout=true)
@@ -312,5 +336,6 @@ public class twitterApis {
         }
     }
     
+   
     
 }

@@ -15,7 +15,7 @@ public class twitterCompController {
     @AuraEnabled
     public Static List<twitterWrapper> getCaseDetails(String recordId){
         List<twitterWrapper> twitterWrapperList = new List<twitterWrapper>();
-        List<Case> CaseDetails = [Select id,subject,Description,Caption__c,Post_Url__c,(Select Comment__c,Comment_Id__c,Replied_Comments__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where id = :recordId ];
+        List<Case> CaseDetails = [Select id,subject,Description,Caption__c,Post_Url__c,Comment_Replied__c,(Select Comment__c,Comment_Id__c,Replied_Comments__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where id = :recordId ];
         
         for(Case caseRec : CaseDetails){
             if(caseRec.Post_Comments__r.size() > 0){
@@ -32,6 +32,7 @@ public class twitterCompController {
             }else{
                 twitterWrapper iw = new twitterWrapper();
                 iw.postCaption = caseRec.Description;
+                iw.comment = caseRec.Comment_Replied__c;
                 iw.PostUrl = caseRec.Post_Url__c;
                 twitterWrapperList.add(iw);
             }
@@ -42,14 +43,7 @@ public class twitterCompController {
     
     @AuraEnabled
     public Static String replyToTweetOnTwittter(String recordId,String textMessage){
-         system.debug('textMessage===>'+textMessage);
-        
-       
         textMessage = textMessage.replaceAll('<[^>]+>','');
-        
-        
-        system.debug('textMessage===>'+textMessage);
-        
         Case CaseRec = [Select id,Post_Id__c from case where id = :recordId ];
         String tweetId = CaseRec.Post_Id__c;
         String ENDPOINT_URL = 'https://api.twitter.com/2/tweets';
@@ -58,33 +52,34 @@ public class twitterCompController {
         HttpRequest request = new HttpRequest();
         request.setEndpoint(ENDPOINT_URL);
         request.setMethod('POST');
-        
-        // Set request headers
         request.setHeader('Content-Type', 'application/json;charset=UTF-8');
         request.setHeader('Authorization', 'Bearer '+commentAccessToken);
         
         // Set the request body
-        Map<String, Object> payloadMap = new Map<String, Object>{
-            'text' => textMessage,
-                'reply' => new Map<String, String>{
-                    'in_reply_to_tweet_id' => tweetId
-                        }};
-                            
-                            String jsonPayload = JSON.serialize(payloadMap);
+        Map<String, Object> payloadMap = new Map<String, Object>{'text' => textMessage,'reply' => new Map<String, String>{'in_reply_to_tweet_id' => tweetId}};
+        String jsonPayload = JSON.serialize(payloadMap);
         request.setBody(jsonPayload);
         
         try {
-            // Send the HTTP request and get the response
-            HttpResponse response = http.send(request);
-            
-            // Process the response
-            if (response.getStatusCode() == 200 || response.getStatusCode() == 201) {
-                String responseBody = response.getBody();
-                System.debug('Response Body: ' + responseBody);
-            } else {
-                System.debug('HTTP Request failed with status code: ' + response.getStatusCode());
-                System.debug('Response Body: ' + response.getBody());
+            String responseBody = '';
+            if(test.isRunningTest()){
+                responseBody = '{"data":{"edit_history_tweet_ids":["1694294660359782754"],"id":"1694294660359782754","text":"@kritisanon @ABandwear89816 thanks"}}';
+            }else{
+                HttpResponse response = http.send(request);   
+                responseBody = response.getBody();
             }
+            Map<String, Object> jsonMap = (Map<String, Object>) JSON.deserializeUntyped(responseBody);
+            Map<String, Object> dataMap = (Map<String, Object>) jsonMap.get('data');
+            String Commentid = (String) dataMap.get('id');
+            system.debug('Commentid-->'+Commentid);
+            case newCase = new case();
+            caseRec.Id   = recordId;
+            caseRec.Comment_Replied__c = textMessage;
+            caseRec.Reply_Id__c = Commentid;
+            caseRec.Comment_URL__c = 'https://twitter.com/letshyphen/status/'+Commentid;
+            update CaseRec;
+            System.debug('Response Body: ' + responseBody);
+            
         } catch (Exception e) {
             System.debug('Exception: ' + e.getMessage());
         }
