@@ -1,6 +1,7 @@
-
 @isTest
-public class Mcaffeine_TwitterAuthenticationTest {    
+public class Mcaffeine_TwitterAuthenticationTest {
+    
+    
     @isTest
     static void testGetAccessToken() {
         Mcaffeine_Twitter_Api_Details__c fap  = New Mcaffeine_Twitter_Api_Details__c();
@@ -26,6 +27,7 @@ public class Mcaffeine_TwitterAuthenticationTest {
         Mcaffeine_Twitter_Api_Details__c tweetSetting = Mcaffeine_Twitter_Api_Details__c.getOrgDefaults();
         //System.assertEquals('sample_access_token', tweetSetting.Comment_AccessToken__c);
     }
+    
     
     @isTest
     static void testGetRefreshedToken() {

@@ -1,11 +1,21 @@
-
 @isTest
 public class Mcaffeine_InstagramHashTagCreatBatchTest {
   @isTest
     static void testBatchExecution() {
         // Create test data
         RecordType caseRecordType = [SELECT Id FROM RecordType WHERE SObjectType = 'Case' AND DeveloperName = 'Instagram' LIMIT 1];
-
+		 Mcaffeine_Instagram_Api_Details__c fap = new Mcaffeine_Instagram_Api_Details__c();
+        fap.CLIENT_ID__c='bccbckbcewbcje';
+        fap.CLIENT_SECRET__c='cbewciuewcw cweu ciw cwucw';
+        fap.REDIRECT_URI__c='bcewcbwecwueicwc c iwcw';
+        fap.accessToken__c='bxiueqbcubce ccwebcw cuew';
+        fap.basicUrl__c='bcwiuecewucwcuew cew cw cweuc';
+        fap.businessUserId__c='bcew ciwu ce ce cuec';
+        fap.next_Pagination_Post_Token__c='ncencencienciencnecne';
+        fap.next_Pagination_Mention_Token__c='uebfbbcuebcebcucbeubcuecue';
+        fap.next_pagination_hashtag_Token__c='jciece ci c e ce c';
+        fap.HashTag__c='ubcebwcubcuewcubcuewbcbew'; 
+        insert fap;
         // Create a test case record
         Case testCase = new Case(
             Subject = 'Test Case',

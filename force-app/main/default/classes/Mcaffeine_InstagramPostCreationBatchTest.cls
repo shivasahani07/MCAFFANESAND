@@ -1,10 +1,9 @@
-
 @isTest
 public class Mcaffeine_InstagramPostCreationBatchTest {
     @isTest
     static void testBatchExecution() {
         RecordType caseRecordType = [SELECT Id FROM RecordType WHERE SObjectType = 'Case' AND DeveloperName = 'Instagram' LIMIT 1];
-        Instagram_Api_Details__c fap = new Instagram_Api_Details__c();
+        Mcaffeine_Instagram_Api_Details__c fap = new Mcaffeine_Instagram_Api_Details__c();
         fap.CLIENT_ID__c='bccbckbcewbcje';
         fap.CLIENT_SECRET__c='cbewciuewcw cweu ciw cwucw';
         fap.REDIRECT_URI__c='bcewcbwecwueicwc c iwcw';
@@ -31,6 +30,7 @@ public class Mcaffeine_InstagramPostCreationBatchTest {
         );
         insert testComment;
         // Start the batch process
+
         Test.startTest();
         Test.setMock(HttpCalloutMock.class, new InstagramAuthHelperTestMockTest());
         Mcaffeine_InstagramPostCreationBatch batch = new Mcaffeine_InstagramPostCreationBatch();

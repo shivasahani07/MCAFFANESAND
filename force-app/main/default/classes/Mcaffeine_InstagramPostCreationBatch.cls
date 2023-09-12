@@ -50,7 +50,7 @@ public class Mcaffeine_InstagramPostCreationBatch implements Database.Batchable<
     }
     
     public void finish(Database.BatchableContext context) {
-        
+        system.debug('nextPaginationPostToken--'+nextPaginationPostToken);
         if(nextPaginationPostToken != null){
             try {
                 Set<Id> CaseIdsToBeDeleted = new Set<Id>();

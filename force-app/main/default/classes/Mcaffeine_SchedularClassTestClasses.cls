@@ -1,4 +1,3 @@
-
 @istest
 public class Mcaffeine_SchedularClassTestClasses {
     @istest

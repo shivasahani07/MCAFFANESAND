@@ -158,5 +158,4 @@ public with sharing class Mcaffeine_TwitterAuthentication {
             public String scope;
             public String refresh_token;
         }
-    }  
-    
+    }

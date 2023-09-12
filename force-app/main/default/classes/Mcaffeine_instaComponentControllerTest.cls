@@ -1,4 +1,3 @@
-
 @isTest
 public class Mcaffeine_instaComponentControllerTest { 
     

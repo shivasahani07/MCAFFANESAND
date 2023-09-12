@@ -1,4 +1,3 @@
-
 @isTest
 public class Macaffeine_TwitterPaginationBatchesTest {
  private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();

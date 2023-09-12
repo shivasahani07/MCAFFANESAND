@@ -1,4 +1,4 @@
-    @isTest
+@isTest
     public class Mcaffeine_twitterApisTest {
         private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
         @isTest
