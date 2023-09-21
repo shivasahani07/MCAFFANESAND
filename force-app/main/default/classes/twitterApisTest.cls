@@ -1,6 +1,6 @@
 @isTest
 public class twitterApisTest {
-    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
     @isTest
     static void testGetAllRecentTweetsFromTwitter() {
         Twitter_Api_Details__c fap  = New Twitter_Api_Details__c();
@@ -16,7 +16,7 @@ public class twitterApisTest {
         fap.Comment_AccessToken__c='Accesstokentest';
         insert fap;
         
-        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         Case caseRec = new Case();
         caseRec.Post_Id__c = '17841405793087218';
         caseRec.RecordTypeId = caseRecordTypeId;
@@ -80,7 +80,7 @@ public class twitterApisTest {
         fap.Comment_AccessToken__c='Accesstokentest';
         insert fap;
         
-        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         Case caseRec = new Case();
         caseRec.Post_Id__c = '17841405793087218';
         caseRec.RecordTypeId = caseRecordTypeId;
@@ -143,7 +143,7 @@ public class twitterApisTest {
         fap.Comment_AccessToken__c='Accesstokentest';
         insert fap;
         
-        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         Case caseRec = new Case();
         caseRec.Post_Id__c = '17841405793087218';
         caseRec.RecordTypeId = caseRecordTypeId;
@@ -206,7 +206,7 @@ public class twitterApisTest {
         fap.Comment_AccessToken__c='Accesstokentest';
         insert fap;
         
-        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         Case caseRec = new Case();
         caseRec.Post_Id__c = '789';
         caseRec.RecordTypeId = caseRecordTypeId;

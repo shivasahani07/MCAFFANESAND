@@ -11,10 +11,39 @@
             if (state === 'SUCCESS') {
                 var serverresponse = response.getReturnValue();
                 component.set("v.tweetDescription",serverresponse.description);
+                component.set("v.brand", serverresponse.brand);
                 /* component.set("v.filteredCommentList", serverresponse); */
                 component.set("v.relatedCommentList",serverresponse.commentWrapperList);
                 component.set("v.rawList",serverresponse.commentWrapperList);
-                /* component.set("v.totalPages", Math.ceil(response.getReturnValue().length / component.get("v.pageSize"))); */
+                var lengthVar = component.get("v.relatedCommentList").length;
+                console.log('length///'+lengthVar);
+                component.set("v.totalRecords",lengthVar); 
+                //---------------------------------------------------------------------------
+                //number of records in each page---------------------------------------------
+                var perPage = component.get("v.perPageSize");
+                //---------------------------------------------------------------------------
+                var values=[];
+                console.log('perPage///'+perPage);
+                //If total number of records are more than 5 or equals 5-----------------------
+                if(lengthVar >= perPage){
+                    for(var i=0;i<perPage;i++){
+                        values.push(response.getReturnValue().commentWrapperList[i]);
+                    }
+                }//--------------------------------------------------------------------------
+                else{//If total number of records are lesser than 5--------------------------
+                    for(var i=0;i<lengthVar;i++){
+                        values.push(response.getReturnValue().commentWrapperList[i]);
+                    }
+                }//--------------------------------------------------------------------------
+                console.log('values///'+values);
+                component.set("v.PaginationList",values);
+                component.set("v.startValue",0);
+                //if there are only 5 records or lesser than that in total-------------------
+                if(lengthVar <= (component.get("v.startValue")+perPage)){
+                    component.set("v.isLastPage",true);
+                }
+                component.set("v.endValue",component.get("v.startValue")+perPage-1);
+                
             }else{
                 
             }
@@ -106,8 +135,10 @@
         var commentId      = component.get("v.selectedCommentId");
         var commentMessage = component.get("v.replyMessage");
         var parentSFID     = component.get("v.parentCommentId");
+        var brand          = component.get("v.brand");
         var action         = component.get("c.postCommentToFB");
         action.setParams({
+            config: brand,
             commentId: commentId,
             commentText : commentMessage,
             parentSfId : parentSFID,
@@ -170,5 +201,65 @@
             }
         });
         $A.enqueueAction(action); 
+    },
+        next: function(component, event, helper) {
+            debugger;
+        var sObjectList = component.get("v.relatedCommentList");
+        console.log('sObjectList///', sObjectList);
+        var startValue = component.get("v.startValue");
+        var endValue = component.get("v.endValue");
+        var perPage = component.get("v.perPageSize");
+        console.log('startValue///', startValue);
+        console.log('endValue///', endValue);
+        var totalRecords = component.get("v.totalRecords");
+        var values = [];
+        //for eg-------------------------------------------------------------------------
+        // this is page 2 and there are 10 records
+        // endValue is 4
+        //if total no. of records == 4+5+1 (i.e. 10)
+        //Or if total no. of records >  10, then evaluate this part----------------------
+        if (totalRecords >= endValue + perPage + 1) {
+            for (var i = endValue + 1; i < endValue + perPage + 1; i++) {
+                values.push(sObjectList[i]);
+            }
+            if (totalRecords == endValue + perPage + 1) {//if total records == 4+5+1-----------
+                component.set("v.isLastPage", true);
+            }
+        }//------------------------------------------------------------------------------
+        else {//if total number of records are lesser than 4+5+1(10) i.e. 8
+            for (var i = endValue + 1; i < totalRecords; i++) {
+                values.push(sObjectList[i]);
+            }
+            component.set("v.isLastPage", true);
+        }//------------------------------------------------------------------------------
+        component.set("v.PaginationList", values);
+        component.set("v.startValue", endValue + 1);
+        component.set("v.endValue", endValue + perPage);
+        console.log('start value////' + component.get("v.startValue"));
+        console.log('end value////' + component.get("v.endValue"));
+        
+    },
+    
+    previous: function(component, event, helper) {
+        debugger;
+        component.set("v.isLastPage", false);
+        var sObjectList = component.get("v.relatedCommentList");
+        console.log('sObjectList///', sObjectList);
+        var startValue = component.get("v.startValue");
+        var endValue = component.get("v.endValue");
+        var perPage = component.get("v.perPageSize");
+        console.log('startValue///', startValue);
+        console.log('endValue///', endValue);
+        var totalRecords = component.get("v.totalRecords");
+        var values = [];
+        for (var i = startValue - perPage; i < startValue; i++) {
+            console.log('i' + i);
+            values.push(sObjectList[i]);
+        }
+        component.set("v.PaginationList", values);
+        component.set("v.startValue", startValue - perPage);
+        component.set("v.endValue", startValue - 1);
+        console.log('start value////' + component.get("v.startValue"));
+        console.log('end value////' + component.get("v.endValue"));
     },
 })

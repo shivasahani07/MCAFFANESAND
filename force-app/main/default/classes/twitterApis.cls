@@ -16,7 +16,7 @@ public class twitterApis {
     private static String basicUrl                      = fap.basicUrl__c;
     private static String businessUserId                = fap.businessUserId__c;
     private static String Mention                       = fap.Mention__c;
-    private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
     
     //Get all the posts that are related to this business user id
    
@@ -55,7 +55,7 @@ public class twitterApis {
         
         String endpointUrl = basicUrl+'/tweets/search/recent';
         String fieldsParam = 'max_results=50&tweet.fields=text,id,in_reply_to_user_id,author_id,created_at&query='+Mention;
-        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         String fullUrl = endpointUrl + '?' + fieldsParam;
         
         Map<String, String> queryParams = new Map<String, String>();
@@ -143,7 +143,7 @@ public class twitterApis {
         }
         String endpointUrl = basicUrl+'/users/'+businessUserId+'/tweets';
         String fieldsParam = 'max_results=50&tweet.fields=text,id,in_reply_to_user_id,author_id,created_at';
-        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         String fullUrl = endpointUrl + '?' + fieldsParam;
         
         Map<String, String> queryParams = new Map<String, String>();
@@ -229,7 +229,7 @@ public class twitterApis {
         
         String endpointUrl = basicUrl+'/users/'+businessUserId+'/mentions';
         String fieldsParam = 'max_results=50&tweet.fields=text,id,author_id,in_reply_to_user_id,created_at';
-        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         String fullUrl = endpointUrl + '?' + fieldsParam;
         
         Map<String, String> queryParams = new Map<String, String>();
@@ -307,7 +307,7 @@ public class twitterApis {
         system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         String endpointUrl = basicUrl+'/tweets/search/recent';
         String fieldsParam = 'max_results=50&tweet.fields=text,id,in_reply_to_user_id,created_at&query=conversation_id:'+tweetId;
-        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         String fullUrl = endpointUrl + '?' + fieldsParam;
         
         Map<String, String> queryParams = new Map<String, String>();

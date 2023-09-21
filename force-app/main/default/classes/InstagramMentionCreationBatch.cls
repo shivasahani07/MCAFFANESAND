@@ -49,10 +49,8 @@ public class InstagramMentionCreationBatch implements Database.Batchable<sObject
     public void finish(Database.BatchableContext context) {
         
         if(nextPaginationMentionToken != null){
-            system.debug('ExistingCaseRecords'+ExistingCaseRecords.size());
             Set<Id> CaseIdsToBeDeleted = new Set<Id>();
             for(case caseRec : ExistingCaseRecords){
-                system.debug('The size is ==>'+caseRec.Post_Comments__r.size());
                 for(Post_Comments__c postCommRec : caseRec.Post_Comments__r){
                     postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
                     caseIdByPostCommentId.put(postCommRec.Comment_Id__c,postCommRec.Case__c);
@@ -76,7 +74,7 @@ public class InstagramMentionCreationBatch implements Database.Batchable<sObject
             
             String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/tags';
             String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,timestamp,username,comments.limit(25){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50&after='+nextPaginationMentionToken;
-            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
             String fullUrl = endpointUrl + '?' + fieldsParam + '&access_token=' + accessToken;
             String body = '';
             Http http = new Http();
@@ -93,9 +91,19 @@ public class InstagramMentionCreationBatch implements Database.Batchable<sObject
             
             
             FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(body, FacebookApiResponse.class);
-            system.debug('responseWrapper'+responseWrapper);
+            if( responseWrapper.data.size() == 50 || string.isNotBlank(responseWrapper.paging.cursors.after)){
+                Instagram_Api_Details__c instaSetting = Instagram_Api_Details__c.getOrgDefaults();
+                instaSetting.Id = instaSetting.Id;
+                instaSetting.next_Pagination_Post_Token__c = responseWrapper.paging.cursors.after;
+                update instaSetting;
+            }else{
+                Instagram_Api_Details__c instaSetting = Instagram_Api_Details__c.getOrgDefaults();
+                instaSetting.Id = instaSetting.Id;
+                instaSetting.next_Pagination_Post_Token__c = null;
+                update instaSetting;
+            }
+            
             for(FacebookApiResponse.DataWrapper postInfo : responseWrapper.data){
-                System.debug('postInfo === >'+postInfo);
                 if(!commentsOnPostByPostId.keyset().contains(postInfo.Id)){
                     Case newCase = new case();
                     newCase.Related_to__c = postInfo.username;
@@ -113,10 +121,8 @@ public class InstagramMentionCreationBatch implements Database.Batchable<sObject
                     newcase.Subject = 'Mention Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                     newcase.Description = postInfo.caption;
                     if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                        insert newcase;
-                        insertedCaseList.add(newcase);
+                        upsert newcase Post_Id__c;
                     }
-                    System.debug('postInfo.comments  If == >'+postInfo.comments );
                     if((postInfo.comments != null)){
                         if(newcase.Id != null){
                             for(FacebookApiResponse.CommentData postInfoRec : postInfo.comments.data){
@@ -151,11 +157,8 @@ public class InstagramMentionCreationBatch implements Database.Batchable<sObject
                                     commentRec.Post_comment_Time__c = postInfoRec.timestamp;
                                     commentRec.Post_Url__c	 = postInfo.permalink;
                                     commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                                    system.debug('replies are'+postInfoRec.replies);
                                     newpostCommentForExistingPosts.add(commentRec);
                                 }else{
-                                    //This will come here comments have to be updated..
-                                    system.debug('replies are'+postInfoRec.replies);
                                     Post_Comments__c commentRec = new Post_Comments__c();
                                     commentRec.Id = postCommentIdByPostId.get(postInfoRec.Id);
                                     if(caseIdByPostCommentId.ContainsKey(postInfoRec.Id)){
@@ -163,12 +166,9 @@ public class InstagramMentionCreationBatch implements Database.Batchable<sObject
                                     }
                                     commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
                                     postCommentListToBeUpdated.add(commentRec);
-                                    
                                 }
                             }
                         }
-                    }else{
-                        system.debug('postInfo.comments'+postInfo.comments);
                     }
                 }
             }
@@ -182,14 +182,16 @@ public class InstagramMentionCreationBatch implements Database.Batchable<sObject
                 }
             }
             
+            //Inserting the Post Comments for new Posts..
             if(newpostCommentList.size() > 0){
-                Database.insert(newpostCommentList,false);
+                upsert newpostCommentList Comment_Id__c;
             }
             
             if(postCommentsForExistingPostsToBeInserted.size() > 0){
                 List<Post_Comments__c> postCommentsDelete = [Select id from Post_Comments__c where Case__c IN:CaseIdsToBeDeleted];
                 database.delete(postCommentsDelete);
-                Database.insert(postCommentsForExistingPostsToBeInserted, false);    
+                upsert postCommentsForExistingPostsToBeInserted Comment_Id__c;
+                //Database.insert(postCommentsForExistingPostsToBeInserted, false);    
             }
             
             if(postCommentListToBeUpdated.size() > 0){

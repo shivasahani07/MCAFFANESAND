@@ -7,7 +7,7 @@
 */
 public class BatchToManageCommentsSize implements Database.Batchable<sObject>,Database.AllowsCallouts,Database.Stateful {
     
-    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
     
     public Database.QueryLocator start(Database.BatchableContext context) {
         List<Case> ExistingCaseRecords    = [Select id , Deletion_Batch_executed__c,Total_Comments__c from case where Total_Comments__c > 50 order by Total_Comments__c ASC ];

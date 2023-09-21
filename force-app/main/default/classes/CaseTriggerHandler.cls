@@ -83,12 +83,18 @@ if(updatedCRRList.size()>0){
     Public Static Void updateCaseContact(List<case> caseList){
         Map<String,Case> caseAndEmailMap = new Map<String,Case>();
         List<Contact> conList = new List<Contact>();
+        system.debug(caseList[0].suppliedemail);
+        system.debug(caseList[0].id);
+        system.debug(caseList[0].Brand__c);
+
         for(Case objCase : caseList){
+            system.debug('Subject---->'+objCase.Subject);
             if(objCase!=null && objCase.Subject!=null && objCase.Subject.Contains('New customer message on') && objCase.Description!=null){
+                
                 String[] lines = objCase.Description.split('\n');
                 Boolean isEmailSection = false;
                 String email = '';
-                
+                system.debug('objCase.Description---->'+objCase.Description);
                 for (String line : lines) {
                     if (line.contains('Email:')) {
                         isEmailSection = true;
@@ -105,6 +111,7 @@ if(updatedCRRList.size()>0){
                         }
                     }
                 }
+                system.debug('email---->'+email);
                 if (!String.isBlank(email) && isEmail(email)) {
                     if(!caseAndEmailMap.containsKey(email)){
                         caseAndEmailMap.put(email, objCase);
@@ -117,8 +124,10 @@ if(updatedCRRList.size()>0){
                     caseAndEmailMap.put(objCase.SuppliedEmail, objCase);
                 }
             }
+            
         }
-        if(caseAndEmailMap!=null){
+        system.debug('caseAndEmailMap---->'+caseAndEmailMap);
+        /*if(caseAndEmailMap!=null){
             List<Contact> contactList = [SELECT Id,Email FROM Contact WHERE Email IN: caseAndEmailMap.keySet()];
             Map<String,Contact> contactEmailMap = New Map<String,Contact>();
             for(Contact objContact: contactList){
@@ -158,7 +167,7 @@ if(updatedCRRList.size()>0){
                     ObjectCase.ContactId = updatedContactEmailMap.get(ObjectCase.SuppliedEmail).Id;
                 }
             }
-        }
+        }*/
     }
     public static Boolean isEmail(String input) {
         String emailPattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$';

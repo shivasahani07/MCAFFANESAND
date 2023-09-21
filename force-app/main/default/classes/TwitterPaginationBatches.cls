@@ -17,7 +17,7 @@ public class TwitterPaginationBatches {
     private static String nextmentionPaginationToken           = fap.Next_Mention_Pagination_Token__c;
     private static String nextRecentTweetPaginationToken       = fap.Next_Recent_Tweet_Pagination_Token__c;
     private static String nextTimelinePaginationToken          = fap.Next_Timeline_Pagination_Token__c;
-    private static Id caseRecordTypeId                         = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId                         = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
     
     @Future(callout=true)
     public static void getAdditionalMentionsFromTimeLine(){
@@ -56,7 +56,7 @@ public class TwitterPaginationBatches {
             
             String endpointUrl = basicUrl+'/users/'+businessUserId+'/mentions';
             String fieldsParam = 'max_results=50&tweet.fields=text,id,author_id,in_reply_to_user_id,created_at&pagination_token='+nextmentionPaginationToken;
-            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
             String fullUrl = endpointUrl + '?' + fieldsParam;
             
             Map<String, String> queryParams = new Map<String, String>();
@@ -154,7 +154,7 @@ public class TwitterPaginationBatches {
             }
             String endpointUrl = basicUrl+'/tweets/search/recent';
             String fieldsParam = 'max_results=50&tweet.fields=text,id,in_reply_to_user_id,author_id,created_at&query='+Mention+'&pagination_token='+nextRecentTweetPaginationToken;
-            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
             String fullUrl = endpointUrl + '?' + fieldsParam;
             
             Map<String, String> queryParams = new Map<String, String>();
@@ -251,9 +251,9 @@ public class TwitterPaginationBatches {
             }
             
             String endpointUrl = basicUrl+'/users/'+businessUserId+'/tweets';
-        String fieldsParam = 'max_results=50&tweet.fields=text,id,in_reply_to_user_id,author_id,created_at&pagination_token='+nextTimelinePaginationToken;
-        Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
-        String fullUrl = endpointUrl + '?' + fieldsParam;
+            String fieldsParam = 'max_results=50&tweet.fields=text,id,in_reply_to_user_id,author_id,created_at&pagination_token='+nextTimelinePaginationToken;
+            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
+            String fullUrl = endpointUrl + '?' + fieldsParam;
             
             Map<String, String> queryParams = new Map<String, String>();
             Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+bearerToken};

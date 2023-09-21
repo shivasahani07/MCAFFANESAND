@@ -3,9 +3,10 @@
     access="global" controller="FBAuthController">
     <aura:attribute name="isModalOpen" type="boolean" default="false" />
     <aura:attribute name="showReplies" type="boolean" default="false" />
-    <aura:attribute name="recordId" type="string" />
+    <aura:attribute name="recordId" type="string" default="500D400000Br66LIAR"/>
     <aura:attribute name="isEditable" type="boolean" default="true" />
     <aura:attribute name="tweetDescription" type="string" default="" />
+    <aura:attribute name="brand" type="string"/>
     <aura:attribute name="tweetId" type="string" default="" />
     <aura:attribute name="showSpinner" type="boolean" default="false" />
     <aura:attribute name="spinner" type="boolean" default="false" />
@@ -24,12 +25,14 @@
 
     <aura:attribute name="searchKeyword" type="String" />
 
-    <!-- Pagination list -->
-    <!-- <aura:attribute name="filteredCommentList" type="List" />
-    <aura:attribute name="currentPage" type="Integer" default="1" />
-    <aura:attribute name="pageSize" type="Integer" default="5" />
-    <aura:attribute name="totalPages" type="Integer" /> -->
-    <!--  -->
+     <!--  for Pagination    -->
+    <aura:attribute name="PaginationList" type="List"/>
+    <aura:attribute name="columns" type="List"/> 
+    <aura:attribute name="totalRecords" type="Integer"/>
+    <aura:attribute name="startValue" type="Integer"/>
+    <aura:attribute name="endValue" type="Integer"/>
+    <aura:attribute name="isLastPage" type="Boolean"/>
+    <aura:attribute name="perPageSize" type="Integer" default="5"/>
     <lightning:card>
 
         <div style="border-style: solid;margin :1%">
@@ -101,7 +104,7 @@
                                 </thead>
 
                                 <tbody>
-                                    <aura:iteration items="{!v.relatedCommentList}" var="acc">
+                                    <aura:iteration items="{!v.PaginationList}" var="acc">
                                         <tr class="slds-hint-parent">
                                             <th data-label="Name" scope="row">
                                                 <div class="slds-truncate" title="{!acc.comment}">
@@ -135,13 +138,10 @@
                                     </aura:iteration>
                                 </tbody>
                             </table>
-                            <!-- <ul>
-                                <aura:iteration start="1" end="{!v.totalPages}" items="{!v.filteredCommentList}" indexVar="index">
-                                    <li class="{!if(v.currentPage == index, 'active', '')}">
-                                        <a href="javascript:void(0);" onclick="{!c.changePage}" data-page="{!i}">{!i}</a>
-                                    </li>
-                                </aura:iteration>
-                            </ul> -->
+							 <div class="slds-float_right slds-border_top">
+                                   <lightning:button onclick="{!c.previous}" disabled="{!v.startValue == 1}" label="Previous" iconName='utility:back'/>
+								    <lightning:button onclick="{!c.next}" disabled="{!v.isLastPage}" label="Next" iconName='utility:forward'/>
+                                </div>                           
                             <aura:set attribute="else">
                                 <p style="text-align: center;">
                                     No comments on this post yet !!

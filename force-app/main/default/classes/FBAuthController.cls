@@ -1,24 +1,28 @@
 public class FBAuthController {
     // Replace these with your actual Facebook App ID, App Secret, and Redirect URI
-    private static final String APP_ID;
+    /*private static final String APP_ID;
     private static final String APP_SECRET;
     private static final String REDIRECT_URI;
     private static final String API_VERSION;
-    private static final String ACCESS_TOKEN;
+    private static final String ACCESS_TOKEN;*/
     // Scopes required for user access token
     private static final String SCOPE = 'openid';//'manage_pages,pages_show_list,pages_messaging_subscriptions,pages_read_engagement,pages_manage_metadata,pages_manage_engagement,pages_read_user_content';
     private static final String FB_GRAPH_API_BASE_URL = 'callout:meta';
-    private static final String PAGE_NAME;
+    private static String PAGE_NAME;
+
+    static Map<String,Meta_App_Credentials__c> APP_CREDS_MAP = new Map<String,Meta_App_Credentials__c>();
     static {
-        Meta_App_Credentials__c credentials = Meta_App_Credentials__c.getAll() != null ? Meta_App_Credentials__c.getAll().get('live') : null; //TODO: make this dynamic
-        if(credentials != null) {
+        //Meta_App_Credentials__c credentials = Meta_App_Credentials__c.getAll() != null ? Meta_App_Credentials__c.getAll().get('live') : null; //TODO: make this dynamic
+        APP_CREDS_MAP = Meta_App_Credentials__c.getAll();
+        System.debug('--- APP_CREDS_MAP '+APP_CREDS_MAP);
+        /* if(credentials != null) {
             APP_ID = credentials.App_Id__c;
             APP_SECRET = credentials.App_Secret__c;
             REDIRECT_URI = credentials.Redirect_URI__c;
             //API_VERSION = credentials.API_Version__c;
             ACCESS_TOKEN = credentials.Access_Token__c;
             PAGE_NAME = credentials.Page_Name__c;
-        }
+        } */
     }
 
     /*@AuraEnabled(cacheable = true)
@@ -62,11 +66,18 @@ public class FBAuthController {
         return encodedString;
     }*/
 
-    public static String getUserAccessToken(String code) {
+    public static String getUserAccessToken(String code, String config) {
+
+        if(String.isBlank(config) || !APP_CREDS_MAP.containsKey(config)) {
+            System.debug('--- invalid params: ');
+            return '';
+        }
+        config = config.toLowerCase();
+        Meta_App_Credentials__c credentials = APP_CREDS_MAP.get(config);
         String tokenEndpoint = FB_GRAPH_API_BASE_URL + '/oauth/access_token';
-        String params = 'client_id=' + EncodingUtil.urlEncode(APP_ID, 'UTF-8') +
-                        '&client_secret=' + EncodingUtil.urlEncode(APP_SECRET, 'UTF-8') +
-                        '&redirect_uri=' + EncodingUtil.urlEncode(REDIRECT_URI, 'UTF-8') +
+        String params = 'client_id=' + EncodingUtil.urlEncode(credentials.App_Id__c, 'UTF-8') +
+                        '&client_secret=' + EncodingUtil.urlEncode(credentials.App_Secret__c, 'UTF-8') +
+                        '&redirect_uri=' + EncodingUtil.urlEncode(credentials.Redirect_URI__c, 'UTF-8') +
                         '&code=' + EncodingUtil.urlEncode(code, 'UTF-8');
 
         HttpRequest request = new HttpRequest();
@@ -87,14 +98,28 @@ public class FBAuthController {
         }
     }
 
-    public static String getAppAccessToken() {
-        String appAccessToken = APP_ID + '|' + APP_SECRET;
+    public static String getAppAccessToken(String config) {
+        if(String.isBlank(config) || !APP_CREDS_MAP.containsKey(config)) {
+            System.debug('--- invalid params: ');
+            return '';
+        }
+
+        Meta_App_Credentials__c credentials = APP_CREDS_MAP.get(config);
+        String appAccessToken = credentials.App_Id__c + '|' + credentials.App_Secret__c;
         return appAccessToken;
     }
 
-    private static Map<String, PageInfo> getPagesMap() {
+    private static Map<String, PageInfo> getPagesMap(String config) {
+
+        if(String.isBlank(config) || !APP_CREDS_MAP.containsKey(config)) {
+            System.debug('--- invalid params: ');
+            return null;
+        }
+
+        Meta_App_Credentials__c credentials = APP_CREDS_MAP.get(config);
+        PAGE_NAME = credentials.Page_Name__c;
         // Prepare the API endpoint URL to get the user's pages
-        String apiEndpoint = FB_GRAPH_API_BASE_URL + '/me/accounts?access_token=' + ACCESS_TOKEN;
+        String apiEndpoint = FB_GRAPH_API_BASE_URL + '/me/accounts?access_token=' + credentials.Access_Token__c;
 
         // Make an HTTP GET request to the Facebook Graph API
         HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(apiEndpoint, null, null);
@@ -126,9 +151,9 @@ public class FBAuthController {
     }
 
     static Map<String,PageInfo>  myPagesMap = new Map<String,PageInfo>();
-    public static String getPageAccessToken() {
+    public static String getPageAccessToken(String config) {
         if(myPagesMap == null || myPagesMap.isEmpty()) {
-            myPagesMap = getPagesMap();
+            myPagesMap = getPagesMap(config);
         }
         if(myPagesMap.containsKey(PAGE_NAME)) {
             return myPagesMap.get(PAGE_NAME).accessToken;
@@ -137,9 +162,9 @@ public class FBAuthController {
         return null;
     }
 
-    public static String getPageId() {
+    public static String getPageId(String config) {
         if(myPagesMap == null || myPagesMap.isEmpty()) {
-            myPagesMap = getPagesMap();
+            myPagesMap = getPagesMap(config);
         }
         if(myPagesMap.containsKey(PAGE_NAME)) {
             return myPagesMap.get(PAGE_NAME).id;
@@ -150,14 +175,14 @@ public class FBAuthController {
 
     
 
-    public static void subscribeToPageWebhook() {
+    public static void subscribeToPageWebhook(String config) {
         String graphApiVersion = 'v17.0';
-        String subscribeEndpoint = FB_GRAPH_API_BASE_URL + '/' + getPageId() + '/subscribed_apps';
+        String subscribeEndpoint = FB_GRAPH_API_BASE_URL + '/' + getPageId(config) + '/subscribed_apps';
 
         String callbackUrl = 'YOUR_WEBHOOK_CALLBACK_URL'; // Replace with your webhook's callback URL
         String subscribedFields = 'feed,mention,conversations,message_mention,messages'; // Add additional fields as needed (comma-separated)
 
-        String params = 'access_token=' + EncodingUtil.urlEncode(getPageAccessToken(), 'UTF-8') +
+        String params = 'access_token=' + EncodingUtil.urlEncode(getPageAccessToken(config), 'UTF-8') +
                         '&subscribed_fields=' + EncodingUtil.urlEncode(subscribedFields, 'UTF-8') +
                         '&callback_url=' + EncodingUtil.urlEncode(callbackUrl, 'UTF-8');
 
@@ -188,10 +213,19 @@ public class FBAuthController {
     }
 
     @AuraEnabled
-    public static void postCommentToFB(String caseId, String commentId, String parentSfId, String commentText) {
+    public static void postCommentToFB(String config, String caseId, String commentId, String parentSfId, String commentText) {
         System.debug('--- postId '+commentId);
         System.debug('--- commentText '+commentText);
         System.debug('--- parentSfId '+parentSfId);
+        System.debug('--- brand '+config);
+
+        if(String.isBlank(config)){
+            System.debug('--- invalid config ' +config);
+            return;
+        }
+            
+        config = config.toLowerCase();
+
         // Prepare the API endpoint URL to post a comment on the specified post
         String apiEndpoint = FB_GRAPH_API_BASE_URL + '/' + commentId + '/comments';//?message=' + commentText + '&access_token='+getPageAccessToken();
 
@@ -202,7 +236,7 @@ public class FBAuthController {
         System.debug(apiEndpoint);
         commentText = removeHTMLTags(commentText);
         Map<String, String> parameters = new Map<String, String>();
-        parameters.put('access_token', getPageAccessToken());
+        parameters.put('access_token', getPageAccessToken(config));
         parameters.put('message', commentText);
 
         HttpRequest request = new HttpRequest();
@@ -272,14 +306,14 @@ public class FBAuthController {
     @AuraEnabled
     public Static FacebookWrapper getCaseDetails(String recordId){
         
-        List<Case> CaseDetails = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Id,Comment_Type__c,Comment__c,Comment_Id__c,Replied_Comments__c,Commented_By__c,Post_Url__c,Post_comment_Time__c,CreatedDate FROM Post_Comments__r WHERE Sent__c = false ORDER BY CreatedDate DESC LIMIT 100) from case where id = :recordId];
+        List<Case> CaseDetails = [Select id,subject,Description,Caption__c,Post_Id__c,Brand__c,(Select Id,Comment_Type__c,Comment__c,Comment_Id__c,Replied_Comments__c,Commented_By__c,Post_Url__c,Post_comment_Time__c,CreatedDate FROM Post_Comments__r WHERE Sent__c = false ORDER BY CreatedDate DESC LIMIT 100) from case where id = :recordId];
         
         FacebookWrapper respWrapper = new FacebookWrapper();
 
         Map<Id, CommentWrapper> commentWrapperMap = new Map<Id,CommentWrapper>();
 
         for(Case caseRec : CaseDetails){
-            respWrapper = new FacebookWrapper(caseRec.Description, caseRec.Post_Id__c);
+            respWrapper = new FacebookWrapper(caseRec.Description, caseRec.Post_Id__c, caseRec.Brand__c);
             for(Post_Comments__c pcRec : caseRec.Post_Comments__r ) {
                 CommentWrapper iw = new CommentWrapper();
                 iw.sf_id = pcRec.Id;
@@ -306,6 +340,7 @@ public class FBAuthController {
         }
         System.debug('--- idToCommentMap: '+commentWrapperMap);
         respWrapper.setComments(commentWrapperMap.values());
+        system.debug('respWrapper------------>'+respWrapper);
         return respWrapper;
     }
 
@@ -332,10 +367,16 @@ public class FBAuthController {
     }
 
     @AuraEnabled
-    public static void sendMessage(String recipientId, String messageText, String caseId, String parentCommentId) {
+    public static void sendMessage(String config, String recipientId, String messageText, String caseId, String parentCommentId) {
         System.debug('--- caseId: '+caseId);
+        System.debug('--- config: '+config);
+        if(String.isBlank(config)) {
+            System.debug('--- invalid config: '+config);
+            return;
+        }
+        config = config.toLowerCase();
         // Construct the API endpoint URL
-        String apiUrl = FB_GRAPH_API_BASE_URL + '/me/messages?access_token='+getPageAccessToken();
+        String apiUrl = FB_GRAPH_API_BASE_URL + '/me/messages?access_token='+getPageAccessToken(config);
 
         // Construct the request body
         messageText = removeHTMLTags(messageText);
@@ -389,6 +430,9 @@ public class FBAuthController {
         public String recepientId = '';
 
         @AuraEnabled
+        public String brand = '';
+
+        @AuraEnabled
         public List<CommentWrapper> commentWrapperList = new List<CommentWrapper>();
 
         FacebookWrapper(){}
@@ -401,9 +445,10 @@ public class FBAuthController {
             this.commentWrapperList = commentWrapperList;
         }
 
-        public FacebookWrapper(String description, String recepientId) {
+        public FacebookWrapper(String description, String recepientId, String brand) {
             this.description = description;
             this.recepientId = recepientId;
+            this.brand = brand;
         }
         
     }

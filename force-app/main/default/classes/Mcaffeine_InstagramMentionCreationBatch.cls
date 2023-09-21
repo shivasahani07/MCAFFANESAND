@@ -32,7 +32,7 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
     List<Case> ExistingCaseRecords                                                       = new List<Case>();
     
     //Getting the record Type Id
-    private static Id caseRecordTypeId                                                   = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId                                                   = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
     
     public Database.QueryLocator start(Database.BatchableContext context) {
         String origin = 'Instagram';
@@ -76,7 +76,7 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
             
             String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/tags';
             String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,timestamp,username,comments.limit(25){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50&after='+nextPaginationMentionToken;
-            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+            Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
             String fullUrl = endpointUrl + '?' + fieldsParam + '&access_token=' + accessToken;
             String body = '';
             Http http = new Http();

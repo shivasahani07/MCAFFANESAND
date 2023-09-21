@@ -13,7 +13,7 @@ public class TwitterAuthentication {
     private static String commentAccessToken            = fap.Comment_AccessToken__c;
     private static String refreshAccessToken            = fap.Comment_RefreshToken__c;
     //Getting the record Type Id
-    private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
     @Future(callout=true)
     public static void getAccessToken() {
         // Create an instance of Http class

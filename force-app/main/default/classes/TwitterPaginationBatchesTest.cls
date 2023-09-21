@@ -1,6 +1,6 @@
 @isTest
 public class TwitterPaginationBatchesTest {
- private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+ private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
     @isTest
     static void testGetAllRecentTweetsFromTwitter() {
         Twitter_Api_Details__c fap  = New Twitter_Api_Details__c();
@@ -19,7 +19,7 @@ public class TwitterPaginationBatchesTest {
         fap.Next_Timeline_Pagination_Token__c='38u8ue32u20e9ue0329';
         insert fap;
         
-        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         Case caseRec = new Case();
         caseRec.Post_Id__c = '17841405793087218';
         caseRec.RecordTypeId = caseRecordTypeId;
@@ -86,7 +86,7 @@ public class TwitterPaginationBatchesTest {
         fap.Comment_AccessToken__c='Accesstokentest';
         insert fap;
         
-        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         Case caseRec = new Case();
         caseRec.Post_Id__c = '17841405793087218';
         caseRec.RecordTypeId = caseRecordTypeId;
@@ -152,7 +152,7 @@ public class TwitterPaginationBatchesTest {
         fap.Comment_AccessToken__c='Accesstokentest';
         insert fap;
         
-        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+        Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Twitter').getRecordTypeId();
         Case caseRec = new Case();
         caseRec.Post_Id__c = '17841405793087218';
         caseRec.RecordTypeId = caseRecordTypeId;

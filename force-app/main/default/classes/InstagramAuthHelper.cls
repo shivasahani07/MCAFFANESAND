@@ -35,7 +35,7 @@ public class InstagramAuthHelper {
         List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
         postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
-    
+        
         for(Post_Comments__c postCommRec : postCommentDataList){
             postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
             caseIdByPostCommentId.put(postCommRec.Comment_Id__c,postCommRec.Case__c);
@@ -73,7 +73,7 @@ public class InstagramAuthHelper {
         }
         FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(body, FacebookApiResponse.class);
         system.debug('responseWrapper'+responseWrapper.data.size());
-        if( responseWrapper.data.size() == 50){
+        if( responseWrapper.data.size() == 50 ){
             system.debug('50 cases are there lets proceed'+responseWrapper.paging.cursors.after);
             Instagram_Api_Details__c instaSetting = Instagram_Api_Details__c.getOrgDefaults();
             instaSetting.Id = instaSetting.Id;
@@ -98,7 +98,7 @@ public class InstagramAuthHelper {
                 newcase.Subject = 'Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                 newcase.Description = postInfo.caption;
                 if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                    insert newcase;
+                    upsert newcase Post_Id__c;
                     insertedCaseList.add(newcase);
                 }
                 if((postInfo.comments != null)){
@@ -153,7 +153,7 @@ public class InstagramAuthHelper {
                 }
             }
         }
-      
+        
         for(Post_Comments__c postCommRec : newpostCommentForExistingPosts){
             if(postCommentIdByPostId.keySet().contains(postCommRec.Comment_Id__c)){
                 
@@ -166,7 +166,8 @@ public class InstagramAuthHelper {
         system.debug('These cases have new comments do have a look'+insertedCaseList.size());
         //This is for new Posts that are inserted :
         if(postCommentsForExistingPostsToBeInserted.size() > 0){
-            Database.insert(postCommentsForExistingPostsToBeInserted, false);    
+            upsert postCommentsForExistingPostsToBeInserted Comment_Id__c;
+            //Database.insert(postCommentsForExistingPostsToBeInserted, false);    
         }
         
         if(postCommentListToBeUpdated.size() > 0){
@@ -174,10 +175,9 @@ public class InstagramAuthHelper {
         }
         
     }
-
+    
     //Get all the mentions that are related to this business user id
     public static void getAllMentionsFromInstaForUserId(){
-        
         List<case> insertedCaseList = new List<case>();
         List<Post_Comments__c> postCommentList                    = new List<Post_Comments__c>();
         List<Post_Comments__c> postCommentListToBeUpdated         = new List<Post_Comments__c>();
@@ -192,18 +192,8 @@ public class InstagramAuthHelper {
         List<Post_Comments__c> postCommentsForExistingPostsToBeInserted     = new List<Post_Comments__c>();
         
         List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
-        system.debug('existingCaseList==>'+existingCaseList);
-        integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
-        List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
-        if(totalComments < 40000){
-            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
-        }else{
-            Integer numberOfQueriesRemaining = 45000-existingCaseList.size();
-            system.debug('numberOfQueriesRemainig'+numberOfQueriesRemaining);
-            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit :numberOfQueriesRemaining ]; 
-        }
-        
-        
+       
+        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit 49000 ]; 
         
         for(Post_Comments__c postCommRec : postCommentDataList){
             postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
@@ -224,7 +214,6 @@ public class InstagramAuthHelper {
                 commentsOnPostByPostId.put(caseRec.Post_Id__c,postCommNewList);
             }
         }
-        system.debug('commentsOnPostByPostId'+commentsOnPostByPostId);
         
         String endpointUrl = 'https://graph.facebook.com/v17.0/'+businessUserId+'/tags';
         String fieldsParam = 'fields=media_url,comments_count,permalink,caption,media_type,timestamp,username,comments.limit(50){id,like_count,user,media,timestamp,username,replies{text,username,timestamp},text}&limit=50';
@@ -237,8 +226,8 @@ public class InstagramAuthHelper {
         
         HttpResponse response = http.send(request);
         FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(response.getBody(), FacebookApiResponse.class);
+        system.debug('The size of the response is---------->'+responseWrapper.data.size());
         if( responseWrapper.data.size() == 50){
-            system.debug('50 cases are there lets proceed'+responseWrapper.paging.cursors.after);
             Instagram_Api_Details__c instaSetting = Instagram_Api_Details__c.getOrgDefaults();
             instaSetting.Id = instaSetting.Id;
             instaSetting.next_Pagination_Mention_Token__c = responseWrapper.paging.cursors.after;
@@ -264,8 +253,7 @@ public class InstagramAuthHelper {
                 newcase.Subject = 'Mention Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                 newcase.Description = postInfo.caption;
                 if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                    insert newcase;
-                    insertedCaseList.add(newcase);
+                    upsert newcase Post_Id__c;
                 }
                 if((postInfo.comments != null)){
                     if(newcase.Id != null){
@@ -301,10 +289,8 @@ public class InstagramAuthHelper {
                                 commentRec.Post_comment_Time__c = postInfoRec.timestamp;
                                 commentRec.Post_Url__c	 = postInfo.permalink;
                                 commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                                system.debug('replies are'+postInfoRec.replies);
                                 postCommentList.add(commentRec);
                             }else{
-                                system.debug('replies are'+postInfoRec.replies);
                                 Post_Comments__c commentRec = new Post_Comments__c();
                                 commentRec.Id = postCommentIdByPostId.get(postInfoRec.Id);
                                 commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
@@ -313,26 +299,24 @@ public class InstagramAuthHelper {
                         }
                     }
                 }else{
-                    system.debug('postInfo.comments'+postInfo.comments);
                 }
             }
         }
-        system.debug('postCommentList'+postCommentList);
         system.debug('insertedCaseList'+insertedCaseList.size());
-        Database.insert(postCommentList, false);
-        system.debug('insertedCaseList==>'+insertedCaseList);
-        Database.update(postCommentListToBeUpdated,false);
+        if(postCommentList.size() > 0){
+            upsert postCommentList Comment_Id__c;
+        }
+        if(postCommentListToBeUpdated.size() > 0){
+            Database.update(postCommentListToBeUpdated,false);
+        }
+        
     }   
     
     @Future(callout=true)
     public static void getPostDetailsByHashTagId(){
         List<Case> caseList = new List<Case>();
         String hashTagId = getHashtagIdFromInsta(hashtagName);
-        system.debug('hashTagId'+hashTagId);
-        
         List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
-        system.debug('existingCaseList==>'+existingCaseList);
-        //List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
         
         integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
@@ -410,7 +394,8 @@ public class InstagramAuthHelper {
                 }
             }
             if(caseList.size() > 0){
-                 Database.insert(caseList, false);
+                upsert caseList Post_Id__c;
+                //Database.insert(caseList, false);
             }
         } else {
             String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.getStatus();

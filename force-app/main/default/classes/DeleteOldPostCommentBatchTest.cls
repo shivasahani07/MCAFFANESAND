@@ -2,7 +2,7 @@
 public class DeleteOldPostCommentBatchTest {
     
     
-    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
     static testMethod void testme1(){
         
         

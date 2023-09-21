@@ -1,9 +1,10 @@
 <aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId" access="global" controller="FBAuthController">
-	<aura:attribute name="isModalOpen" type="boolean" default="false"/>
+    <aura:attribute name="isModalOpen" type="boolean" default="false"/>
     <aura:attribute name="showReplies" type="boolean" default="false"/>
-    <aura:attribute name="recordId" type="string" />
+    <aura:attribute name="recordId" type="string"  default="500D400000Br4jmIAB"/>
     <aura:attribute name="isEditable" type="boolean" default="true"/>
     <aura:attribute name="tweetDescription" type="string" default=""/>
+    <aura:attribute name="brand" type="string"/>
     <aura:attribute name="recepientid" type="string" default=""/>
     <aura:attribute name="showSpinner" type="boolean" default="false"/>
     <aura:attribute name="spinner" type="boolean" default="false"/>
@@ -19,10 +20,19 @@
     <aura:attribute name="index" type="integer" default=""/>
     <aura:attribute name="label" type="string" default=""/>
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <!-- Pagination list -->
     
+    <aura:attribute name="PaginationList" type="List"/>
+    <aura:attribute name="columns" type="List"/> 
+    <aura:attribute name="totalRecords" type="Integer"/>
+    <aura:attribute name="startValue" type="Integer"/>
+    <aura:attribute name="endValue" type="Integer"/>
+    <aura:attribute name="isLastPage" type="Boolean"/>
+    <aura:attribute name="perPageSize" type="Integer" default="2"/>
     <aura:attribute name="searchKeyword" type="String" />
+    
     <!-- https://sales-productionsales.sandbox.lightning.force.com/lightning/r/Post_Comments__c/a1y6D0000017VFaQAM/related/Message_Attachments__r/view -->
-     <lightning:card >
+    <lightning:card >
         
         <div style = "border-style: solid;margin :1%">
             <div>
@@ -30,7 +40,7 @@
                 <div style="display:flex;">
                     <img src="{!$Resource.Facebook}" style="height:50px;"/>
                     <lightning:buttonIcon iconName="utility:refresh" variant="bare" onclick="{! c.doInit }" alternativeText="Refresh"
-                        title="Refresh" />
+                                          title="Refresh" />
                 </div>
                 <aura:if isTrue="{!v.showSpinner}">
                     <div class="exampleHolder" >
@@ -97,7 +107,7 @@
                                     </thead>
                                     
                                     <tbody>
-                                        <aura:iteration items="{!v.relatedCommentList}" var="acc">
+                                        <aura:iteration items="{!v.PaginationList}" var="acc">
                                             <tr class="slds-hint-parent">
                                                 <th data-label="Name" scope="row">
                                                     <div class="slds-truncate" title="{!acc.comment}">
@@ -117,9 +127,9 @@
                                                 <td data-label="Message">
                                                     <aura:if isTrue="{!acc.numOfAttachments > 0}">
                                                         <a href="{!acc.relURL}" target="_blank">{!acc.numOfAttachments}</a>
-                                                    <aura:set attribute="else">
-                                                        {!acc.numOfAttachments}
-                                                    </aura:set>
+                                                        <aura:set attribute="else">
+                                                            {!acc.numOfAttachments}
+                                                        </aura:set>
                                                     </aura:if>
                                                 </td>
                                                 
@@ -139,7 +149,10 @@
                                         </aura:iteration>
                                     </tbody>
                                 </table>
-                            </div>
+                                <div class="slds-float_right slds-border_top">
+                                    <lightning:button onclick="{!c.previous}" disabled="{!v.startValue == 0}" label="Previous" iconName='utility:back'/>
+                                    <lightning:button onclick="{!c.next}" disabled="{!v.isLastPage}" label="Next" iconName='utility:forward'/>
+                                </div>                            </div>
                             <aura:set attribute="else">
                                 <p style="text-align: center;">
                                     No DM on this Conversation thread yet !!

@@ -1,10 +1,5 @@
-/**
- * Author: DeaGle~
- * 30th  August, 23
- */
-
-@RESTResource(urlMapping='/webhooklistener_mcaffine/*')
-global without sharing class Mcaffeine_MetaWebhookListener {
+@RESTResource(urlMapping='/webhooklistener_instaGramAPI/*')
+global without sharing class Mcaffein_webhookListener {
     
     static String WEB_TOKEN;// = 'EAAKJz6xiZC6gBAEQ7Ub3pazJxFazWFUXEkbp2Hlg0W0EmblRJVhrLLr1WUwL81hqfSxRXJJ8otiGZAyQ66onZBoRFTOqdjZBKioZA5iy55N0rxyZBulbw1XVgu6ktZA0b0vs6uZAFG7SodcyHayN2id8WAktoJejpdCcaTLF9NwV6FkTvizWzYBZC';
     static String ORIGIN, OWNER_TYPE, OWNER_NAME;
@@ -138,6 +133,7 @@ global without sharing class Mcaffeine_MetaWebhookListener {
         }
     }
 
+    //TODO upsert
     private static void editExistingCase(String requestbody) {
         List<Case> postCaseList = new List<Case>();
         FBFeedNotificationWrapper postNotification = (FBFeedNotificationWrapper) JSON.deserialize(requestBody, FBFeedNotificationWrapper.class);
@@ -154,25 +150,50 @@ global without sharing class Mcaffeine_MetaWebhookListener {
             
             if(!postChangeMap.isEmpty()) {
                 List<Case> casesToUpdate = [SELECT Id,Post_Id__c,Created_Time__c,Description FROM Case WHERE Post_Id__c IN :postChangeMap.keySet()];
-                for(Case postCase: casesToUpdate) {
-                    if(postChangeMap.containsKey(postCase.Post_Id__c)) {
-                        FBFeedNotificationWrapper.cls_changes change = postChangeMap.get(postCase.Post_Id__c);
-                        postCase.Description = change.value.message;
-                        postCase.Created_Time__c = change.value.created_time + '';
+                if(casesToUpdate.isEmpty()) {
+                    List<Case> caseToInsert = new List<Case>();
+                    for(FBFeedNotificationWrapper.cls_changes change : postChangeMap.values()) {
+                        Case postCase = new Case(Subject= 'New post on FB Page from:' + change.value.from_c != null ? change.value.from_c.name : '', Type_of_Post__c='Post', 
+                    Origin = ORIGIN, RecordTypeId = RECORD_TYPE_ID,
+                    OwnerId = RECORD_OWNER_ID, Post_Id__c = change.value.post_id, Description = change.value.message, Brand__c = PAGE_NAME, Created_Time__c = change.value.created_time + '');
                         if(change.value.item == 'photo' || change.value.item == 'video') {
                             postCase.Post_Attachment_Url__c = change.value.link;
                         }
-                        System.debug('--- new POST case:'+postCase);
+                        caseToInsert.add(postCase);
                     }
-                   
-                }
-                if(!casesToUpdate.isEmpty()) {
-                    System.debug('--- updating case: '+casesToUpdate);
-                    try{
-                        Database.update(casesToUpdate, false);
-                    }catch(DMLException e){
-                        System.debug('--- e.Message:'+e.getMessage());
+
+                    if(!caseToInsert.isEmpty()) {
+                        try {
+                            System.debug('--- caseToInsert'+ caseToInsert);
+                            insert caseToInsert;
+                        }catch(DMLException e) {
+                            System.debug('--- DML EXception on: '+e.getLineNumber());
+                            System.debug('--- DML EXception message: '+e.getMessage());
+                        }
                     }
+                        
+                }else {
+                    for(Case postCase: casesToUpdate) {
+                        if(postChangeMap.containsKey(postCase.Post_Id__c)) {
+                            FBFeedNotificationWrapper.cls_changes change = postChangeMap.get(postCase.Post_Id__c);
+                            postCase.Description = change.value.message;
+                            postCase.Created_Time__c = change.value.created_time + '';
+                            if(change.value.item == 'photo' || change.value.item == 'video') {
+                                postCase.Post_Attachment_Url__c = change.value.link;
+                            }
+                            System.debug('--- new POST case:'+postCase);
+                        }
+                    
+                    }
+                    if(!casesToUpdate.isEmpty()) {
+                        System.debug('--- updating case: '+casesToUpdate);
+                        try{
+                            Database.update(casesToUpdate, false);
+                        }catch(DMLException e){
+                            System.debug('--- e.Message:'+e.getMessage());
+                        }
+                    }
+
                 }
             }
 
@@ -377,7 +398,7 @@ global without sharing class Mcaffeine_MetaWebhookListener {
                     System.debug('--- e.Message:'+e.getMessage());
                 } */
             }else {
-                Case newMentionCase = new Case(Post_Id__c = (String)fbMentionObject.get('post_id'), Type_of_Post__c = 'Tags/Mentions', Description = (String)fbMentionObject.get('message'), Origin = ORIGIN, Subject= 'New mention on FB from: '+ (String)fbMentionObject.get('sender_name') != null ? (String)fbMentionObject.get('sender_name') : '', RecordTypeId = RECORD_TYPE_ID, OwnerId = RECORD_OWNER_ID);
+                Case newMentionCase = new Case(Brand__c = PAGE_NAME, Post_Id__c = (String)fbMentionObject.get('post_id'), Type_of_Post__c = 'Tags/Mentions', Description = (String)fbMentionObject.get('message'), Origin = ORIGIN, Subject= 'New mention on FB from: '+ (String)fbMentionObject.get('sender_name') != null ? (String)fbMentionObject.get('sender_name') : '', RecordTypeId = RECORD_TYPE_ID, OwnerId = RECORD_OWNER_ID);
                 //Post_Comments__c cm = new Post_Comments__c(Comment__c = (String)fbMentionObject.get('message'), Commented_By__c = (String)fbMentionObject.get('sender_name')/* , OwnerId = RECORD_OWNER_ID */);
                 try {
                     insert newMentionCase;

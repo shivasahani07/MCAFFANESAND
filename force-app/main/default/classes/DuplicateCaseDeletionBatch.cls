@@ -7,7 +7,7 @@
 */
 public class DuplicateCaseDeletionBatch implements Database.Batchable<sObject>,Database.AllowsCallouts,Database.Stateful{
     List<Case> ExistingCaseRecords = new List<Case>();
-    private static Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
     
     public Database.QueryLocator start(Database.BatchableContext context) {
         String query = 'Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId';

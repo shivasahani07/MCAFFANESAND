@@ -7,7 +7,7 @@
 */
 public class DuplicateCommentDeletionBatch implements Database.Batchable<sObject>,Database.AllowsCallouts,Database.Stateful{
     List<Post_Comments__c> ExistingPostCommentRecords = new List<Post_Comments__c>();
-    private static Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
     
     public Database.QueryLocator start(Database.BatchableContext context) {
         String query = 'Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c';

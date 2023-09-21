@@ -49,7 +49,7 @@ public class InstagramAuthHelperTest {
     static testmethod void getPostDetailsByHashTagId_test(){  
         Test.startTest();
         Test.setMock(HttpCalloutMock.class, new InstagramAuthHelperTestMockTest());
-        InstagramAuthHelper.getPostDetailsByHashTagId('INSTA');
+        InstagramAuthHelper.getPostDetailsByHashTagId();
         Test.stopTest();
     }
     

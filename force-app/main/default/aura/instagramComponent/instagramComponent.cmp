@@ -20,13 +20,22 @@
     <aura:attribute name="urlToPost" type="string" default=""/>
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
     
+    <!--  for Pagination    -->
+    <aura:attribute name="PaginationList" type="List"/>
+    <aura:attribute name="columns" type="List"/> 
+    <aura:attribute name="totalRecords" type="Integer"/>
+    <aura:attribute name="startValue" type="Integer"/>
+    <aura:attribute name="endValue" type="Integer"/>
+    <aura:attribute name="isLastPage" type="Boolean"/>
+    <aura:attribute name="perPageSize" type="Integer" default="5"/>
+    
     <lightning:card >
         
         <div style = "border-style: solid;margin :1%">
             <div style = "margin :1%">
                 
                 <div style ="width :20%">
-                    <!--img src="{!$Resource.Instagram}"/-->
+                    <img src="{!$Resource.Instagram}"/>
                 </div>
                 <aura:if isTrue="{!v.showSpinner}">
                     <div class="exampleHolder">
@@ -92,7 +101,7 @@
                                     </thead>
                                     
                                     <tbody>
-                                        <aura:iteration items="{!v.relatedCommentList}" var="acc">
+                                        <aura:iteration items="{!v.PaginationList}" var="acc">
                                             <tr class="slds-hint-parent">
                                                 <th data-label="Name" scope="row">
                                                     <div class="slds-truncate" title="{!acc.comment}">
@@ -116,7 +125,6 @@
                                                 <p><lightning:formattedUrl value="{!acc.PostUrl}" label="Visit the POST" target="_blank" /></p>                                                                            
                                             </td-->
                                                 <td data-label="Action">
-                                                   
                                                     <aura:if isTrue="{!v.typeOfPost == 'Post'}">
                                                         <lightning:button title="{!acc.CommentId}" name="{!acc.CommentedBy}" value="{!acc.comment}" variant="brand" label="Reply"  onclick="{! c.openModel }" />
                                                     </aura:if>
@@ -126,6 +134,10 @@
                                         </aura:iteration>
                                     </tbody>
                                 </table>
+                                <div class="slds-float_right slds-border_top">
+                                   <lightning:button onclick="{!c.previous}" disabled="{!v.startValue == 0}" label="Previous" iconName='utility:back'/>
+								    <lightning:button onclick="{!c.next}" disabled="{!v.isLastPage}" label="Next" iconName='utility:forward'/>
+                                </div>
                                 <aura:set attribute="else">
                                     <p style="text-align: center;">
                                         No comments on this post yet !!

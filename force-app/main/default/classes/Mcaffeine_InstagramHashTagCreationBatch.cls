@@ -28,7 +28,7 @@ public class Mcaffeine_InstagramHashTagCreationBatch  implements Database.Batcha
     List<String> casePostIds                                                 = new List<String>();
     List<Case> ExistingCaseRecords                                           = new List<Case>();
     //Getting the record Type Id
-    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
+    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
     
     public Database.QueryLocator start(Database.BatchableContext context) {
         String origin = 'Instagram';
