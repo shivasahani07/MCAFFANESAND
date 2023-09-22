@@ -91,7 +91,7 @@ public class Mcaffeine_InstagramHashTagCreationBatch  implements Database.Batcha
             if(!commentsOnPostByPostId.keyset().contains(postInfo.Id)){
                 Case newCase = new case();
                 newCase.Related_to__c = postInfo.username;
-                newCase.Brand__c      = 'Hyphen';
+                newCase.Brand__c      = 'mCaffeine';
                 newCase.Origin        = 'Instagram';
                 newCase.Post_Id__c = postInfo.id;
                 newcase.Created_Time__c = String.valueOf(postInfo.timestamp).removeEnd('+0000');

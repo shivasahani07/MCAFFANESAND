@@ -1,7 +1,7 @@
 <aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="Mcaffeine_instaComponentController">
     <aura:attribute name="isModalOpen" type="boolean" default="false"/>
     <aura:attribute name="showReplies" type="boolean" default="false"/>
-    <aura:attribute name="recordId" type="string" default="a1U6D00000103KMUAY" />
+    <aura:attribute name="recordId" type="string" default="500D400000Bs1buIAB" />
     <aura:attribute name="isEditable" type="boolean" default="true"/>
     <aura:attribute name="tweetDescription" type="string" default=""/>
     <aura:attribute name="tweetId" type="string" default=""/>
@@ -26,7 +26,7 @@
             <div style = "margin :1%">
                 
                 <div style ="width :20%">
-                    <!--img src="{!$Resource.Instagram}"/-->
+                    <img src="{!$Resource.Instagram}"/>
                 </div>
                 <aura:if isTrue="{!v.showSpinner}">
                     <div class="exampleHolder">

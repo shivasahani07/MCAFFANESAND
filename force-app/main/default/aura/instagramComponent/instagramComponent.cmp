@@ -1,7 +1,7 @@
 <aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="instaComponentController">
     <aura:attribute name="isModalOpen" type="boolean" default="false"/>
     <aura:attribute name="showReplies" type="boolean" default="false"/>
-    <aura:attribute name="recordId" type="string" default="a1U6D00000103KMUAY" />
+    <aura:attribute name="recordId" type="string" default="500D400000Bs1c2IAB" />
     <aura:attribute name="isEditable" type="boolean" default="true"/>
     <aura:attribute name="tweetDescription" type="string" default=""/>
     <aura:attribute name="tweetId" type="string" default=""/>
