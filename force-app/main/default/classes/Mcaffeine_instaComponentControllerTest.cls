@@ -23,27 +23,25 @@ public class Mcaffeine_instaComponentControllerTest {
     
     @isTest
     static void testGetCaseDetails() {
-        // Create a test Case record
+    
         Case testCase = new Case();
         testCase.Subject = 'Test Case';
         testCase.Description = 'Test Case Description';
+        testcase.Post_Id__c = '18229403821211947';
+        testcase.Brand__c = 'mCaffeine';
         insert testCase;
         
-        // Create a test Post_Comments__c record associated with the Case
         Post_Comments__c commentRecord = new Post_Comments__c();
-        commentRecord.Comment_Id__c = 'TestCommentId';
+        commentRecord.Comment_Id__c = '18229403821211947';
         commentRecord.Comment__c = 'Test Comment';
         commentRecord.Post_Url__c = 'https://www.example.com/test-post-url';
         commentRecord.Post_comment_Time__c =string.valueof(Datetime.now());
         commentRecord.Replied_Comments__c = 'RepliesWrapper:[data=(ReplyData:[id=18229403821211947, text=@sagarikaranaa its AMAZING, timestamp=2023-07-30T19:15:50+0000, username=kavyajhunjhunwala])]';
         commentRecord.Case__c = testCase.Id;
         insert commentRecord;
-        
-        // Call the getCaseDetails method with the test data
-        List<Mcaffeine_instaComponentController.instaWrapper> instaWrapperList = Mcaffeine_instaComponentController.getCaseDetails(testCase.Id);
+        Mcaffeine_instaComponentController.getCaseDetails(testCase.Id);
         
     }
-    
     
     @isTest
     static void testReplyToComment() {
@@ -51,6 +49,7 @@ public class Mcaffeine_instaComponentControllerTest {
         Case testCase = new Case();
         testCase.Subject = 'Test Case';
         testCase.Description = 'Test Case Description';
+        testcase.Brand__c = 'mCaffeine';
         insert testCase;
         
         // Create a test Post_Comments__c record
@@ -80,6 +79,7 @@ public class Mcaffeine_instaComponentControllerTest {
         Case testCase = new Case();
         testCase.Subject = 'Test Case';
         testCase.Description = 'Test Case Description';
+        testcase.Brand__c = 'mCaffeine';
         insert testCase;
         
         // Create a test Post_Comments__c record
@@ -97,10 +97,5 @@ public class Mcaffeine_instaComponentControllerTest {
         Test.startTest();
         Mcaffeine_instaComponentController.getUpdatedComments(testCase.Id);
         Test.stopTest();
-        
-        
-       
-        
-       
     }
 }

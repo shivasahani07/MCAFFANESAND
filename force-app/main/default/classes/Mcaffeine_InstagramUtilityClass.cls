@@ -1,4 +1,4 @@
-/* Test Class name : InstagramUtilityTest
+/* Test Class name : Mcaffeine_InstagramUtilityTestClass
 * created Date     : 29/07/2023
 * Created By       : shubham kumar
 * Last Modfied By  : shubham kumar
@@ -24,6 +24,7 @@ public class Mcaffeine_InstagramUtilityClass {
         Map<String, String> queryParams = new Map<String, String>();
         Map<String, String> headers = new Map<String, String>{'Content-Type' => 'application/json','Authorization' => 'Bearer '+accessToken};
             HttpResponse response = DynamicHttpCallout.makeHttpGetCallout(endpointUrl, queryParams, headers);
+        system.debug('response'+response);
         if (response.getStatusCode() == 200) {
             Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
             instaJSONHandler jsonResponse = instaJSONHandler.parse(response.getBody());
@@ -68,7 +69,7 @@ public class Mcaffeine_InstagramUtilityClass {
         map<String,List<Post_Comments__c>> commentsOnPostByPostId = new map<String,List<Post_Comments__c>>();
         map<String,String> caseIdByPostId = new map<String,String>();
         map<String,String> postCommentIdByPostId = new map<String,String>();
-        List<Case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where Post_Id__c = :mediaId];
+        List<Case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where Post_Id__c = :mediaId  AND Brand__c='mCaffeine'];
         
         try{
             List<String> casePostIds = new List<String>();
@@ -158,7 +159,7 @@ public class Mcaffeine_InstagramUtilityClass {
         map<id,Case> caseRecordsByOwnerId = new map<id,case>();
         List<Case> caseListToBeUpdated = new List<Case>();
         List<String> ownerIds = new list<String>();
-        List<Case> casesWithNewComments  = [Select id ,Status,CaseNumber,Priority,Subject,OwnerId from case where id IN : caseIds and status != 'New'];
+        List<Case> casesWithNewComments  = [Select id ,Status,CaseNumber,Priority,Subject,OwnerId from case where id IN : caseIds and status != 'New'  AND Brand__c='mCaffeine'];
         
         for(Case caseRec : casesWithNewComments){
             caseRec.Status = 'New';

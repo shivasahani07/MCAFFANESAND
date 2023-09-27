@@ -1,4 +1,4 @@
-/* Test Class name : InstagramAuthHelperTest
+/* Test Class name : Mcaffeine_InstagramAuthHelperTest
 * created Date     : 29/07/2023
 * Created By       : shubham kumar
 * Last Modfied By  : shubham kumar
@@ -32,7 +32,7 @@ public class Mcaffeine_InstagramAuthHelper {
         map<String,String> caseIdByPostCommentId                            = new map<String,String>();
         List<String> casePostIds                                            = new List<String>();
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'  AND Brand__c='mCaffeine'];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
         postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
     
@@ -98,7 +98,7 @@ public class Mcaffeine_InstagramAuthHelper {
                 newcase.Subject = 'Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                 newcase.Description = postInfo.caption;
                 if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                    insert newcase;
+                    upsert newcase Post_Id__c;
                     insertedCaseList.add(newcase);
                 }
                 if((postInfo.comments != null)){
@@ -166,8 +166,9 @@ public class Mcaffeine_InstagramAuthHelper {
         system.debug('These cases have new comments do have a look'+insertedCaseList.size());
         //This is for new Posts that are inserted :
         if(postCommentsForExistingPostsToBeInserted.size() > 0){
-            Database.insert(postCommentsForExistingPostsToBeInserted, false);    
-        }
+            upsert postCommentsForExistingPostsToBeInserted Comment_Id__c;
+            //Database.insert(postCommentsForExistingPostsToBeInserted, false);    
+       }
         
         if(postCommentListToBeUpdated.size() > 0){
             Database.update(postCommentListToBeUpdated,false);
@@ -191,20 +192,10 @@ public class Mcaffeine_InstagramAuthHelper {
         List<Post_Comments__c> newpostCommentForExistingPosts               = new List<Post_Comments__c>();
         List<Post_Comments__c> postCommentsForExistingPostsToBeInserted     = new List<Post_Comments__c>();
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
-        system.debug('existingCaseList==>'+existingCaseList);
-        integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
-        List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
-        if(totalComments < 40000){
-            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
-        }else{
-            Integer numberOfQueriesRemaining = 45000-existingCaseList.size();
-            system.debug('numberOfQueriesRemainig'+numberOfQueriesRemaining);
-            postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit :numberOfQueriesRemaining ]; 
-        }
-        
-        
-        
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'  AND Brand__c='mCaffeine'];
+       
+        List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList  Limit 49000 ]; 
+         
         for(Post_Comments__c postCommRec : postCommentDataList){
             postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
             caseIdByPostCommentId.put(postCommRec.Comment_Id__c,postCommRec.Case__c);
@@ -264,9 +255,8 @@ public class Mcaffeine_InstagramAuthHelper {
                 newcase.Subject = 'Mention Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                 newcase.Description = postInfo.caption;
                 if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                    insert newcase;
-                    insertedCaseList.add(newcase);
-                }
+                    upsert newcase Post_Id__c;
+                 }
                 if((postInfo.comments != null)){
                     if(newcase.Id != null){
                         for(FacebookApiResponse.CommentData postInfoRec : postInfo.comments.data){
@@ -319,10 +309,14 @@ public class Mcaffeine_InstagramAuthHelper {
         }
         system.debug('postCommentList'+postCommentList);
         system.debug('insertedCaseList'+insertedCaseList.size());
-        Database.insert(postCommentList, false);
-        system.debug('insertedCaseList==>'+insertedCaseList);
-        Database.update(postCommentListToBeUpdated,false);
-    }   
+        if(postCommentList.size() > 0){
+            upsert postCommentList Comment_Id__c;
+        }
+        if(postCommentListToBeUpdated.size() > 0){
+            Database.update(postCommentListToBeUpdated,false);
+        }
+        
+   }   
     
     @Future(callout=true)
     public static void getPostDetailsByHashTagId(){
@@ -330,9 +324,7 @@ public class Mcaffeine_InstagramAuthHelper {
         String hashTagId = getHashtagIdFromInsta(hashtagName);
         system.debug('hashTagId'+hashTagId);
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
-        system.debug('existingCaseList==>'+existingCaseList);
-        //List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'  AND Brand__c='mCaffeine'];
         
         integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
@@ -410,8 +402,9 @@ public class Mcaffeine_InstagramAuthHelper {
                 }
             }
             if(caseList.size() > 0){
-                 Database.insert(caseList, false);
-            }
+                upsert caseList Post_Id__c;
+                //Database.insert(caseList, false);
+           }
         } else {
             String errorMessage = 'Error: ' + response.getStatusCode() + ' - ' + response.getStatus();
             System.debug(errorMessage);

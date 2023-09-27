@@ -32,7 +32,7 @@ public class InstagramAuthHelper {
         map<String,String> caseIdByPostCommentId                            = new map<String,String>();
         List<String> casePostIds                                            = new List<String>();
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram' AND Brand__c='Hyphen'];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
         postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
         
@@ -191,7 +191,7 @@ public class InstagramAuthHelper {
         List<Post_Comments__c> newpostCommentForExistingPosts               = new List<Post_Comments__c>();
         List<Post_Comments__c> postCommentsForExistingPostsToBeInserted     = new List<Post_Comments__c>();
         
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'AND Brand__c='Hyphen'];
        
         List<Post_Comments__c> postCommentDataList = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList Limit 49000 ]; 
         
@@ -316,7 +316,7 @@ public class InstagramAuthHelper {
     public static void getPostDetailsByHashTagId(){
         List<Case> caseList = new List<Case>();
         String hashTagId = getHashtagIdFromInsta(hashtagName);
-        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'AND Brand__c='Hyphen'];
         
         integer totalComments = [Select Count() from Post_Comments__c where case__c IN :existingCaseList ];
         List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();

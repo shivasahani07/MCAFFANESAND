@@ -1,5 +1,5 @@
 /* 
-* Test Class name : InstagramMentionCreationBatchTest
+* Test Class name : Mcaffeine_InstagramMentionCreaBatchTest
 * created Date     : 29/07/2023
 * Created By       : shubham kumar
 * Last Modfied By  : shubham kumar
@@ -32,11 +32,12 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
     List<Case> ExistingCaseRecords                                                       = new List<Case>();
     
     //Getting the record Type Id
-    private static Id caseRecordTypeId                                                   = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
+    private static Id caseRecordTypeId                                                   = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
     
     public Database.QueryLocator start(Database.BatchableContext context) {
         String origin = 'Instagram';
-        String query = 'Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r) from case where Origin = :origin and recordTypeId = :caseRecordTypeId';
+        String Brand='mCaffeine';
+        String query = 'Select id,subject,Description,Caption__c,Post_Id__c,(Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r) from case where Origin = :origin and recordTypeId = :caseRecordTypeId AND Brand__c = :Brand';
         return Database.getQueryLocator(query);
     }
     
@@ -47,12 +48,10 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
     }
     
     public void finish(Database.BatchableContext context) {
-        
+                system.debug('nextPaginationMentionToken--'+nextPaginationMentionToken);
         if(nextPaginationMentionToken != null){
-            system.debug('ExistingCaseRecords'+ExistingCaseRecords.size());
             Set<Id> CaseIdsToBeDeleted = new Set<Id>();
             for(case caseRec : ExistingCaseRecords){
-                system.debug('The size is ==>'+caseRec.Post_Comments__r.size());
                 for(Post_Comments__c postCommRec : caseRec.Post_Comments__r){
                     postCommentIdByPostId.put(postCommRec.Comment_Id__c,postCommRec.Id);
                     caseIdByPostCommentId.put(postCommRec.Comment_Id__c,postCommRec.Case__c);
@@ -93,9 +92,21 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
             
             
             FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(body, FacebookApiResponse.class);
-            system.debug('responseWrapper'+responseWrapper);
+            if( responseWrapper.data.size() == 50 || string.isNotBlank(responseWrapper.paging.cursors.after)){
+                Mcaffeine_Instagram_Api_Details__c instaSetting = Mcaffeine_Instagram_Api_Details__c.getOrgDefaults();
+                instaSetting.Id = instaSetting.Id;
+                instaSetting.next_Pagination_Mention_Token__c = responseWrapper.paging.cursors.after;
+                system.debug('instaSetting.next_Pagination_Mention_Token__c'+instaSetting.next_Pagination_Mention_Token__c);
+                update instaSetting;
+            }else{
+                Mcaffeine_Instagram_Api_Details__c instaSetting = Mcaffeine_Instagram_Api_Details__c.getOrgDefaults();
+                instaSetting.Id = instaSetting.Id;
+                system.debug('instaSetting.next_Pagination_Mention_Token__c'+instaSetting.next_Pagination_Mention_Token__c);
+                instaSetting.next_Pagination_Mention_Token__c = null;
+                update instaSetting;
+            }
+            
             for(FacebookApiResponse.DataWrapper postInfo : responseWrapper.data){
-                System.debug('postInfo === >'+postInfo);
                 if(!commentsOnPostByPostId.keyset().contains(postInfo.Id)){
                     Case newCase = new case();
                     newCase.Related_to__c = postInfo.username;
@@ -113,10 +124,8 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
                     newcase.Subject = 'Mention Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                     newcase.Description = postInfo.caption;
                     if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                        insert newcase;
-                        insertedCaseList.add(newcase);
+                        upsert newcase Post_Id__c;
                     }
-                    System.debug('postInfo.comments  If == >'+postInfo.comments );
                     if((postInfo.comments != null)){
                         if(newcase.Id != null){
                             for(FacebookApiResponse.CommentData postInfoRec : postInfo.comments.data){
@@ -151,11 +160,8 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
                                     commentRec.Post_comment_Time__c = postInfoRec.timestamp;
                                     commentRec.Post_Url__c	 = postInfo.permalink;
                                     commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
-                                    system.debug('replies are'+postInfoRec.replies);
                                     newpostCommentForExistingPosts.add(commentRec);
                                 }else{
-                                    //This will come here comments have to be updated..
-                                    system.debug('replies are'+postInfoRec.replies);
                                     Post_Comments__c commentRec = new Post_Comments__c();
                                     commentRec.Id = postCommentIdByPostId.get(postInfoRec.Id);
                                     if(caseIdByPostCommentId.ContainsKey(postInfoRec.Id)){
@@ -163,12 +169,9 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
                                     }
                                     commentRec.Replied_Comments__c = string.valueOf(postInfoRec.replies);
                                     postCommentListToBeUpdated.add(commentRec);
-                                    
                                 }
                             }
                         }
-                    }else{
-                        system.debug('postInfo.comments'+postInfo.comments);
                     }
                 }
             }
@@ -182,14 +185,16 @@ public class Mcaffeine_InstagramMentionCreationBatch implements Database.Batchab
                 }
             }
             
+            //Inserting the Post Comments for new Posts..
             if(newpostCommentList.size() > 0){
-                Database.insert(newpostCommentList,false);
+                upsert newpostCommentList Comment_Id__c;
             }
             
             if(postCommentsForExistingPostsToBeInserted.size() > 0){
                 List<Post_Comments__c> postCommentsDelete = [Select id from Post_Comments__c where Case__c IN:CaseIdsToBeDeleted];
                 database.delete(postCommentsDelete);
-                Database.insert(postCommentsForExistingPostsToBeInserted, false);    
+                upsert postCommentsForExistingPostsToBeInserted Comment_Id__c;
+                //Database.insert(postCommentsForExistingPostsToBeInserted, false);    
             }
             
             if(postCommentListToBeUpdated.size() > 0){

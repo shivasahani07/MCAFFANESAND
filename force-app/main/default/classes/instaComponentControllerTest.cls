@@ -39,6 +39,8 @@ public class instaComponentControllerTest {
         commentRecord.Case__c = testCase.Id;
         insert commentRecord;
         
+       
+        
         // Call the getCaseDetails method with the test data
         List<instaComponentController.instaWrapper> instaWrapperList = instaComponentController.getCaseDetails(testCase.Id);
         

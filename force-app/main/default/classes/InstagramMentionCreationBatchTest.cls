@@ -19,6 +19,7 @@ public class InstagramMentionCreationBatchTest {
             Subject = 'Test Case',
             Origin = 'Instagram',
             RecordTypeId = caseRecordType.Id,
+            Brand__c='Hyphen',
             Post_Id__c = '17841405793087218'
         );
         insert testCase;

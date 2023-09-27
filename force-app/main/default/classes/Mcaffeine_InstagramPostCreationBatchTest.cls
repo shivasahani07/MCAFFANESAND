@@ -5,6 +5,7 @@ public class Mcaffeine_InstagramPostCreationBatchTest {
         RecordType caseRecordType = [SELECT Id FROM RecordType WHERE SObjectType = 'Case' AND DeveloperName = 'Instagram' LIMIT 1];
         Mcaffeine_Instagram_Api_Details__c fap = new Mcaffeine_Instagram_Api_Details__c();
         fap.CLIENT_ID__c='bccbckbcewbcje';
+        fap.Name='mcaffeine';
         fap.CLIENT_SECRET__c='cbewciuewcw cweu ciw cwucw';
         fap.REDIRECT_URI__c='bcewcbwecwueicwc c iwcw';
         fap.accessToken__c='bxiueqbcubce ccwebcw cuew';
@@ -19,6 +20,7 @@ public class Mcaffeine_InstagramPostCreationBatchTest {
             Subject = 'Test Case',
             Origin = 'Instagram',
             RecordTypeId = caseRecordType.Id,
+            Brand__c='mCaffeine',
             Post_Id__c = '17841405793087218'
         );
         insert testCase;

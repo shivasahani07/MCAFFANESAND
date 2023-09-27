@@ -22,6 +22,7 @@ public class Mcaffeine_InstagramAuthHelperTest {
         caseRec.Post_Id__c = '17841405793087218';
         caseRec.RecordTypeId = caseRecordTypeId;
         caseRec.Origin = 'Instagram';
+        caseRec.Brand__c='mCaffeine';
         insert caserec;
         
         Post_Comments__c postComment = new Post_Comments__c(); 
@@ -61,7 +62,8 @@ public class Mcaffeine_InstagramAuthHelperTest {
         Case testCase = new Case(
             Subject = 'Test Case',
             Description = 'Test description',
-            Post_Id__c = '12345',
+            Post_Id__c = '17841405793087218',
+            Brand__c='mCaffeine',
             Origin = 'Instagram',
             recordtypeId = caseRecordTypeId // Make sure to use an actual Record Type Id
         );

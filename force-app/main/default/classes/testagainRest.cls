@@ -8,7 +8,7 @@ global class testagainRest {
         //system.debug('req------->'+req.requestBody);
         //system.debug('apikey------->'+req.headers.get('x-api-key'));
         
-        if(req.headers.get('x-api-key')=='8374596128'){
+       // if(req.headers.get('x-api-key')=='8374596128'){
             String body=EncodingUtil.base64Decode(EncodingUtil.base64Encode(req.requestBody)).toString();
             if(body.contains('date'))
             {
@@ -29,7 +29,8 @@ global class testagainRest {
             shipBody shpbdy=(shipBody)JSON.deserialize(body,shipBody.class);
 			system.debug('shpbdy------->'+shpbdy.scans[1]);  
             system.debug('shpbdy------->'+shpbdy.scans[1].location); 
-        }
+            ShipRocketCallbackController.updateOrderRecord(shpbdy.order_id,shpbdy);
+       // }
         
         return 200;
     }
@@ -52,7 +53,7 @@ global class testagainRest {
     }
     public class cls_scans {
             public String location;	//Mumbai_Chndivli_PC (Maharashtra)
-            public String date123;	//2022-05-16 16:18:47
+            public String date123123;	//2022-05-16 16:18:47
             public String activity;	//Manifested - Consignment Manifested
             public String status;	//new
            	public String sr_status;	//NA

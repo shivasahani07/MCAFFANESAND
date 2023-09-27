@@ -1,4 +1,4 @@
-/* Test Class name : InstagramPaginatedApisTest
+/* Test Class name : Mcaffeine_InstagramPaginatedApisTest
 * created Date     : 29/07/2023
 * Created By       : shubham kumar
 * Last Modfied By  : shubham kumar
@@ -18,7 +18,7 @@ public class Mcaffeine_InstagramPaginatedApis {
     private static String nextPaginationHashTagToken    = fap.next_pagination_hashtag_Token__c;
     private static String hashtagName                   = fap.HashTag__c; 
     //Getting the record Type Id
-    private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Social').getRecordTypeId();
+    private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
     
     @Future(callout=true)
     public static void getNextBatchOfPostsFromInsta(){
@@ -36,7 +36,7 @@ public class Mcaffeine_InstagramPaginatedApis {
             map<String,String> caseIdByPostCommentId                            = new map<String,String>();
             List<String> casePostIds                                            = new List<String>();
             
-            List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+            List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram' AND Brand__c='mCaffeine'];
             List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
             postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
             
@@ -108,7 +108,7 @@ public class Mcaffeine_InstagramPaginatedApis {
                     newcase.Subject = 'Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                     newcase.Description = postInfo.caption;
                     if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                        insert newcase;
+                        upsert newcase Post_Id__c;
                         insertedCaseList.add(newcase);
                     }
                     if((postInfo.comments != null)){
@@ -183,7 +183,7 @@ public class Mcaffeine_InstagramPaginatedApis {
                 Database.update(postCommentListToBeUpdated,false);
             }
         }else{
-            InstagramAuthHelper.getAllPostsFromInstaForUserId();
+            Mcaffeine_InstagramAuthHelper.getAllPostsFromInstaForUserId();
         }
     }
     
@@ -202,7 +202,7 @@ public class Mcaffeine_InstagramPaginatedApis {
             map<String,String> caseIdByPostCommentId                            = new map<String,String>();
             List<String> casePostIds                                            = new List<String>();
             
-            List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+            List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'  AND Brand__c='mCaffeine'];
             List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
             postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
             
@@ -272,7 +272,8 @@ public class Mcaffeine_InstagramPaginatedApis {
                     newcase.Subject = 'Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                     newcase.Description = postInfo.caption;
                     if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                        insert newcase;
+                        //insert newcase;
+                        upsert newcase Post_Id__c;
                         insertedCaseList.add(newcase);
                     }
                     if((postInfo.comments != null)){
@@ -347,7 +348,7 @@ public class Mcaffeine_InstagramPaginatedApis {
                 Database.update(postCommentListToBeUpdated,false);
             }
         }else{
-            InstagramAuthHelper.getAllMentionsFromInstaForUserId();
+            Mcaffeine_InstagramAuthHelper.getAllMentionsFromInstaForUserId();
         }
     }
     

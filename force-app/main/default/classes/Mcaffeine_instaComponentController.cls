@@ -1,5 +1,5 @@
 /*
-* Test Class name : InstagramAuthHelperTest_v1
+* Test Class name : Mcaffeine_instaComponentControllerTest
 * created Date     : 29/07/2023
 * Created By       : shubham kumar
 * Last Modfied By  : shubham kumar
@@ -75,15 +75,16 @@ public class Mcaffeine_instaComponentController {
         
     }
     //This is being called on page load..
+    
     @AuraEnabled
     public Static List<instaWrapper> getCaseDetails(String recordId){
         List<instaWrapper> instaWrapperList = new List<instaWrapper>();
-        List<Case> CaseDetails = [Select id,subject,Description,Type_of_Post__c,Caption__c,POST_URL__c,(Select Comment__c,Comment_Id__c,Replied_Comments__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where id = :recordId];
-        
+        List<Case> CaseDetails = [Select id,subject,Description,Type_of_Post__c,Caption__c,POST_URL__c,(Select Comment__c,Comment_Id__c,Replied_Comments__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__r ) from case where id = :recordId  AND Brand__c='mCaffeine'];
+        system.debug(CaseDetails);
         for(Case caseRec : CaseDetails){
             try{
             if(caseRec.Post_Comments__r.size() > 0){
-               
+                    system.debug('the isze is'+caseRec.Post_Comments__r);
                     for(Post_Comments__c pcRec : caseRec.Post_Comments__r ){
                         instaWrapper iw = new instaWrapper();
                         iw.comment = pcRec.Comment__c;

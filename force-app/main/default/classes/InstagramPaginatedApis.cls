@@ -36,7 +36,7 @@ public class InstagramPaginatedApis {
             map<String,String> caseIdByPostCommentId                            = new map<String,String>();
             List<String> casePostIds                                            = new List<String>();
             
-            List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+            List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'AND Brand__c ='Hyphen'];
             List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
             postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
             
@@ -69,10 +69,15 @@ public class InstagramPaginatedApis {
             HttpRequest request = new HttpRequest();
             request.setEndpoint(fullUrl);
             request.setMethod('GET');
-            
-            HttpResponse response = http.send(request);
-            System.debug('response.getBody() === > '+response.getBody());
-            FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(response.getBody(), FacebookApiResponse.class);
+            string body = '';
+            if (test.isRunningTest()){
+                body = '{"data":[{"id":"178414057930818","username":"example_user","timestamp":"2023-07-29T12:34:56+0000","caption":"This is an amazing photo!","media_type":"IMAGE","media_url":"https://www.example.com/image.jpg","permalink":"https://www.instagram.com/p/ABC123/","comments_count":5,"comments":{"data":[{"id":"178414057930818","text":"Awesome!","username":"user1","timestamp":"2023-07-29T12:40:00+0000"},{"id":"17851087209098193","text":"Great shot!","username":"user2","timestamp":"2023-07-29T12:42:30+0000"},{"id":"178414057930818","text":"Beautiful!","username":"user3","timestamp":"2023-07-29T12:45:15+0000"},{"id":"17851087209098195","text":"Nice!","username":"user4","timestamp":"2023-07-29T12:50:20+0000"},{"id":"17851087209098196","text":"Love it!","username":"user5","timestamp":"2023-07-29T13:00:00+0000"}],"paging":{"cursors":{"before":"cursor_before","after":"cursor_after"},"next":"https://www.instagram.com/p/ABC123/comments?cursor=cursor_after"}}},{"id":"178414057930818","username":"another_user","timestamp":"2023-07-29T14:30:45+0000","caption":"Sunset vibes!","media_type":"VIDEO","media_url":"https://www.example.com/video.mp4","permalink":"https://www.instagram.com/p/XYZ456/","comments_count":2,"comments":{"data":[{"id":"17851087209098197","text":"Amazing video!","username":"user6","timestamp":"2023-07-29T14:40:00+0000"},{"id":"178414057930818","text":"Beautiful sunset!","username":"user7","timestamp":"2023-07-29T14:45:30+0000"}],"paging":{"cursors":{"before":"cursor_before","after":"cursor_after"},"next":"https://www.instagram.com/p/XYZ456/comments?cursor=cursor_after"}}}],"paging":{"cursors":{"before":"cursor_before","after":"cursor_after"},"next":"https://www.instagram.com/user123/media?cursor=cursor_after"}}';
+            }else{
+                HttpResponse response = http.send(request);
+                body = response.getBody();
+            }
+            System.debug('response.getBody() === > '+body);
+            FacebookApiResponse responseWrapper = (FacebookApiResponse) JSON.deserialize(body, FacebookApiResponse.class);
             system.debug('responseWrapper'+responseWrapper);
             
             if( responseWrapper.data.size() == 50){
@@ -108,7 +113,7 @@ public class InstagramPaginatedApis {
                     newcase.Subject = 'Post from instagram.Related to '+postInfo.username+'. Created Date-Time : '+newcase.Created_Time__c;
                     newcase.Description = postInfo.caption;
                     if(!commentsOnPostByPostId.keyset().contains(newCase.Post_Id__c)){
-                        insert newcase;
+                        upsert newcase Post_Id__c;
                         insertedCaseList.add(newcase);
                     }
                     if((postInfo.comments != null)){
@@ -202,7 +207,7 @@ public class InstagramPaginatedApis {
             map<String,String> caseIdByPostCommentId                            = new map<String,String>();
             List<String> casePostIds                                            = new List<String>();
             
-            List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+            List<case> existingCaseList = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram' AND Brand__c='Hyphen'];
             List<Post_Comments__c> postCommentDataList = new List<Post_Comments__c>();
             postCommentDataList  = [Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :existingCaseList ]; 
             

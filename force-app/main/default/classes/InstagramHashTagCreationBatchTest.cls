@@ -9,6 +9,7 @@ public class InstagramHashTagCreationBatchTest {
         Case testCase = new Case(
             Subject = 'Test Case',
             Origin = 'Instagram',
+            Brand__c='Hyphen',
             RecordTypeId = caseRecordType.Id,
             Post_Id__c = '17841405793087218'
         );

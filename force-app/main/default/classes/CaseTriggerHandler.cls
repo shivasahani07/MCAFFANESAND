@@ -80,6 +80,7 @@ if(updatedCRRList.size()>0){
             } 
         }
     }
+    /*
     Public Static Void updateCaseContact(List<case> caseList){
         Map<String,Case> caseAndEmailMap = new Map<String,Case>();
         List<Contact> conList = new List<Contact>();
@@ -127,7 +128,7 @@ if(updatedCRRList.size()>0){
             
         }
         system.debug('caseAndEmailMap---->'+caseAndEmailMap);
-        /*if(caseAndEmailMap!=null){
+        if(caseAndEmailMap!=null){
             List<Contact> contactList = [SELECT Id,Email FROM Contact WHERE Email IN: caseAndEmailMap.keySet()];
             Map<String,Contact> contactEmailMap = New Map<String,Contact>();
             for(Contact objContact: contactList){
@@ -167,10 +168,10 @@ if(updatedCRRList.size()>0){
                     ObjectCase.ContactId = updatedContactEmailMap.get(ObjectCase.SuppliedEmail).Id;
                 }
             }
-        }*/
+        }
     }
     public static Boolean isEmail(String input) {
         String emailPattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$';
         return Pattern.matches(emailPattern, input);
-    }
+    }*/
 }

@@ -36,7 +36,7 @@ public class InstagramPostCreationBatch implements Database.Batchable<sObject>,D
     private static Id caseRecordTypeId                                                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
     
     public Database.QueryLocator start(Database.BatchableContext context) {
-        ExistingCaseRecords = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram'];
+        ExistingCaseRecords = [Select id,subject,Description,Caption__c,Post_Id__c from case where recordTypeId = :caseRecordTypeId and Origin = 'Instagram' AND Brand__c='Hyphen'];
         String query = 'Select Comment__c,Comment_Id__c,case__c,Case__r.Post_Id__c,Commented_By__c,Post_Url__c,Post_comment_Time__c from Post_Comments__c where case__c IN :ExistingCaseRecords';
         return Database.getQueryLocator(query);
     }

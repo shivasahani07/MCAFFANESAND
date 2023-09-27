@@ -2,17 +2,30 @@ public class EmailMessageTriggerHandler {
     
     Public Static void updateBrandandContact(List<EmailMessage> msgList){
         set<id> mCaffId=new set<id>();
-        List<Case> caseList=new List<Case>();
+        set<id> hyphenId=new set<id>();
+        
         for(EmailMessage em:msgList)
         {
-            if(em.ToAddress=='testtechila@gmail.com' && em.ParentId!=Null)
+            if(em.ToAddress=='woot@mcaffeine.com' && em.ParentId!=Null)
             {
                 mCaffId.add(em.ParentId);
+            }
+            else if(em.ToAddress=='care@letshyphen.com' && em.ParentId!=Null)
+            {
+                hyphenId.add(em.ParentId);
             }
         }
         if(!mCaffId.isEmpty())
         {
-            caseList=[Select id,Subject,Description,SuppliedEmail,Brand__c From Case where id IN: mCaffId];
+            List<Case> caseList=[Select id,Subject,Description,SuppliedEmail,Brand__c From Case where id IN: mCaffId];
+            if(!caseList.isEmpty())
+            {
+                updateCaseContact(caseList,'mCaffeine');
+            }
+        }
+        if(!hyphenId.isEmpty())
+        {
+            List<Case> caseList=[Select id,Subject,Description,SuppliedEmail,Brand__c From Case where id IN: hyphenId];
             if(!caseList.isEmpty())
             {
                 updateCaseContact(caseList,'mCaffeine');
@@ -87,6 +100,7 @@ public class EmailMessageTriggerHandler {
                         Contact objCon = new Contact();
                         objCon.LastName = ObjectCase.SuppliedEmail.split('@')[0];
                         objCon.Email = ObjectCase.SuppliedEmail;
+                        objCon.Brand__c=brandname;
                         conList.add(objCon);
                         if(!updatedContactEmailMap.containsKey(ObjectCase.SuppliedEmail)){
                             updatedContactEmailMap.put(ObjectCase.SuppliedEmail,objCon);
@@ -106,6 +120,16 @@ public class EmailMessageTriggerHandler {
                     ObjectCase.ContactId = updatedContactEmailMap.get(ObjectCase.SuppliedEmail).Id;
                 }
             }
+           if(caseList.size()>0)
+           {
+               update caseList;
+           }
+           if(caseAndEmailMap.size()>0)
+           {
+               update caseAndEmailMap.values();
+           }
+           
+           
         }
     }
     public static Boolean isEmail(String input) {

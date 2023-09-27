@@ -15,10 +15,12 @@ public class InstagramPostCreationBatchTest {
         fap.next_pagination_hashtag_Token__c='jciece ci c e ce c';
         fap.HashTag__c='ubcebwcubcuewcubcuewbcbew'; 
         insert fap;
+        
         Case testCase = new Case(
             Subject = 'Test Case',
             Origin = 'Instagram',
             RecordTypeId = caseRecordType.Id,
+            Brand__c='Hyphen',
             Post_Id__c = '17841405793087218'
         );
         insert testCase;

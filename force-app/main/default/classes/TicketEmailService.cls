@@ -110,20 +110,91 @@ global class TicketEmailService implements Messaging.InboundEmailHandler {
                 }
                 
                 dataMap.add(mapObject);
-                
-                
-              
               }
+            Map<String,Product2> productMap=new Map<String,Product2>();
+            List<Product2> productInsert=new List<Product2>();
+            List<Product2> productUpdate=new List<Product2>();
+            List<PricebookEntry> PricebookEntryList=new List<PricebookEntry>();
+            for(Product2 podObj:[select id,ProductCode,name from Product2]){
+                 productMap.put(podObj.ProductCode,podObj);
+             }
+            Map<String,productWrapper> productmapCSV=new Map<String,productWrapper>();
+            for(Map<String,String> mapObject:dataMap){
+                if(!productMap.containskey(mapObject.get('Item SKU Code')) && !productmapCSV.containskey(mapObject.get('Item SKU Code')) && !string.isBlank(mapObject.get('Item SKU Code')))
+                {
+                    productWrapper prodwrp=new productWrapper();
+                    prodwrp.name=mapObject.get('SKU Name');
+                    prodwrp.MRP=mapObject.get('MRP');
+					productmapCSV.put(mapObject.get('Item SKU Code'),prodwrp);
+                }
+                else if(productMap.containskey(mapObject.get('Item SKU Code')) && productMap.get(mapObject.get('Item SKU Code')).name!=mapObject.get('SKU Name'))
+                {
+                    Product2 prod2Obj=new Product2();
+                    prod2Obj.id=productMap.get(mapObject.get('Item SKU Code')).id;
+                    prod2Obj.Name=mapObject.get('SKU Name');
+                    productUpdate.add(prod2Obj);
+                }
+            }
+            if(productUpdate.size()>0)
+            {
+                update productUpdate;
+            }
+            if(productmapCSV.size()>0)
+            {
+                for(String productcode:productmapCSV.keyset())
+                {
+                 	Product2 prodObj=new Product2();
+                    prodObj.ProductCode=productcode;
+                    prodObj.name=productmapCSV.get(productcode).name;
+                    prodObj.IsActive=true;
+                    productInsert.add(prodObj);
+				}
+                if(productInsert.size()>0)
+                {
+                    insert productInsert;
+                    
+                    for(Product2 prodIns:productInsert)
+                    {
+                        PricebookEntry priceBk=new PricebookEntry();
+                        priceBk.Product2Id=prodIns.Id;
+                        priceBk.Pricebook2Id='01sHn000000qqgpIAA';
+                        priceBk.UnitPrice=Decimal.valueof(productmapCSV.get(prodIns.ProductCode).MRP);
+                        priceBk.IsActive=true;
+                        PricebookEntryList.add(priceBk);
+                    }
+                    
+                    if(PricebookEntryList.size()>0)
+                    {
+                        insert PricebookEntryList;
+                    }
+                    
+                }
+            }
+            Map<String,PriceBookEntryProduct> mapProductEntry=new Map<String,PriceBookEntryProduct>();
+            for(Product2 prodObj:[Select id,ProductCode,(Select id from pricebookentries) from product2])
+            {
+                PriceBookEntryProduct pb=new PriceBookEntryProduct();
+                pb.priceBookEntryId=prodObj.pricebookentries[0].id;
+                pb.productId=prodObj.id;
+                mapProductEntry.put(prodObj.ProductCode,pb);
+            }
             
+            System.debug(mapProductEntry);
+           
+            
+
+           
             for(Map<String,String> mapObject:dataMap){
                 
-                if(!mapOrder.containsKey(mapObject.get('Display Order Code')))
+                if(!mapOrder.containsKey(mapObject.get('Display Order Code')) )
                 {
                     mapOrder.put(mapObject.get('Display Order Code'),getOrder(mapObject));
                     OrderItem orderItemObject=new OrderItem();
                     //orderItemObject.OrderId=od.id;
                     orderItemObject.Quantity=1;
                     orderItemObject.UnitPrice=decimal.valueof(mapObject.get('Total Price'));
+                    orderItemObject.PricebookEntryId=mapProductEntry.get(mapObject.get('Item SKU Code')).priceBookEntryId;
+                    orderItemObject.Product2Id=mapProductEntry.get(mapObject.get('Item SKU Code')).productId;
                     List<OrderItem> orderItemList= new List<OrderItem>();
                     orderItemList.add(orderItemObject);
                     orderwithOredrItem.put(mapObject.get('Display Order Code'),orderItemList);
@@ -134,6 +205,8 @@ global class TicketEmailService implements Messaging.InboundEmailHandler {
                     OrderItem orderItemObject=new OrderItem();
                     //orderItemObject.OrderId=od.id;
                     orderItemObject.Quantity=1;
+                    orderItemObject.PricebookEntryId=mapProductEntry.get(mapObject.get('Item SKU Code')).priceBookEntryId;
+                    orderItemObject.Product2Id=mapProductEntry.get(mapObject.get('Item SKU Code')).productId;
                     orderItemObject.UnitPrice=decimal.valueof(mapObject.get('Total Price'));
                     if(orderwithOredrItem.containskey(mapObject.get('Display Order Code')))
                     {
@@ -154,13 +227,14 @@ global class TicketEmailService implements Messaging.InboundEmailHandler {
             
             
          system.debug('Data json -->'+JSON.serialize(dataMap.get(0)));
+            
 
             if(mapOrder.values().size()>0)
             {
                 insert mapOrder.values();
             }
             
-           List<Order> tempListOrder= [select id,Display_Code__c from Order where Display_Code__c in :orderwithOredrItem.keyset()];   
+            List<Order> tempListOrder= [select id,Display_Code__c from Order where Display_Code__c in :orderwithOredrItem.keyset()];   
             List<OrderItem> insertOrderLine=new List<OrderItem>();
             Map<String,String> displayOrderId=new Map<String,String>();
             for(Order tempOrderObject:tempListOrder) {
@@ -217,10 +291,23 @@ global class TicketEmailService implements Messaging.InboundEmailHandler {
                 od.ShippingCity=mapObject.get('Shipping Address City');
                 od.ShippingState=mapObject.get('Shipping Address State');
                 od.ShippingStreet=mapObject.get('Shipping Address Line 2');
-                od.ShippingPostalCode=mapObject.get('Shipping Address Pincode');        
-                 return od;
+                od.ShippingPostalCode=mapObject.get('Shipping Address Pincode'); 
+        		od.Pricebook2Id='01sHn000000qqgpIAA';
+                return od;
 		
         
     } 
+    
+    public class productWrapper
+    {
+        Public string name;
+        Public string MRP;
+    }
+    
+    public class PriceBookEntryProduct
+    {
+        Public string priceBookEntryId;
+        Public string productId;
+    }
     
 }

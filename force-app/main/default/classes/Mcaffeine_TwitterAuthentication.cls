@@ -1,6 +1,6 @@
 public with sharing class Mcaffeine_TwitterAuthentication {
     
-        private static Mcaffeine_Twitter_Api_Details__c fap           = Mcaffeine_Twitter_Api_Details__c.getInstance();
+        private static Mcaffeine_Twitter_Api_Details__c fap = Mcaffeine_Twitter_Api_Details__c.getInstance();
         private static final String CLIENT_ID               = fap.CLIENT_ID__c;
         private static String CLIENT_SECRET                 = fap.CLIENT_SECRET__c;
         private static String REDIRECT_URI                  = fap.REDIRECT_URI__c;

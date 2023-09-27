@@ -5,6 +5,7 @@ public class Mcaffeine_InstagramMentionCreaBatchTest {
         // Create test data
         RecordType caseRecordType = [SELECT Id FROM RecordType WHERE SObjectType = 'Case' AND DeveloperName = 'Instagram' LIMIT 1];
          Mcaffeine_Instagram_Api_Details__c fap = new Mcaffeine_Instagram_Api_Details__c();
+        fap.Name='mcaffeine';
         fap.CLIENT_ID__c='bccbckbcewbcje';
         fap.CLIENT_SECRET__c='cbewciuewcw cweu ciw cwucw';
         fap.REDIRECT_URI__c='bcewcbwecwueicwc c iwcw';
@@ -19,10 +20,11 @@ public class Mcaffeine_InstagramMentionCreaBatchTest {
         Case testCase = new Case(
             Subject = 'Test Case',
             Origin = 'Instagram',
+            Brand__c='mCaffeine',
             RecordTypeId = caseRecordType.Id,
             Post_Id__c = '17841405793087218'
         );
-        insert testCase;
+        upsert testCase;
 
         Post_Comments__c testComment = new Post_Comments__c(
             Case__c = testCase.Id,
