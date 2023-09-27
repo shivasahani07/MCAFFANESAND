@@ -20,9 +20,11 @@ global without sharing class instaWebhookApi {
                     if(changesList != null && !changesList.isEmpty() && ((Map<String,Object>)changesList[0]).containsKey('field')) {
                         Map<String,Object> change = (Map<String,Object>)changesList[0];
                         if(change.get('field') == 'comments') {
-                            newPostRequest(requestBody);
+                            processNewComment(requestBody);
                         }else if(change.get('field') == 'mentions') {
-                            processMention(change);
+                            processNewMention(change);
+                        }else if(change.get('field') == 'messages') {
+                            processNewMessages(change);
                         }
                     }
                 }
@@ -34,7 +36,7 @@ global without sharing class instaWebhookApi {
         RestContext.response.responseBody = Blob.valueOf(JSON.serialize(new ResponseWrapper('Received', WEB_TOKEN)));
     }
     
-    private static void newPostRequest(String requestBody) {
+    private static void processNewComment(String requestBody) {
         system.debug('postNotification Coming here');
         List<Case> postCaseList = new List<Case>();
         InstaNotificationWrapper postNotification = (InstaNotificationWrapper) JSON.deserialize(requestBody, InstaNotificationWrapper.class);
@@ -45,7 +47,7 @@ global without sharing class instaWebhookApi {
                 timeStamp = entry.time_c; //TODO convert this to readable format
                 for(InstaNotificationWrapper.cls_changes change: entry.changes) {
                     system.debug('post_id==>'+change.value);
-                    InstagramAuthHelper.getAllDetailsOfComments(change.value.id);
+                    //InstagramAuthHelper.getAllDetailsOfComments(change.value.id);
                     Case postCase = new Case(Origin = 'Instagram',Created_Time__c = getTimeStamp(timeStamp), Subject= 'New Comments that you are tagged in.', Post_Id__c = change.value.id, Description = change.value.text,Type='Comments',Mention__c='utilitarian_labs');
                     postCaseList.add(postCase);
                 }
@@ -61,7 +63,7 @@ global without sharing class instaWebhookApi {
         }
     }
     
-    private static void processMention(Map<String,Object> responseMap) {
+    private static void processNewMention(Map<String,Object> responseMap) {
         Map<String, Object> fbMentionObject = (Map<String, Object>) responseMap.get('value');
         system.debug('fbMentionObject-->'+fbMentionObject);
         system.debug('fbMentionObject-------->'+fbMentionObject.get('comment_id'));
@@ -69,10 +71,19 @@ global without sharing class instaWebhookApi {
         
         if(fbMentionObject != null) {
             system.debug('fbMentionObject--->'+fbMentionObject);
-            InstagramAuthHelper.getAllDetailsOfMedia(String.valueOf(fbMentionObject.get('media_id')));
+            //InstagramAuthHelper.getAllDetailsOfMedia(String.valueOf(fbMentionObject.get('media_id')));
         }
     }
-   
+    
+    private static void processNewMessages(Map<String,Object> responseMap) {
+        Map<String, Object> fbMentionObject = (Map<String, Object>) responseMap.get('value');
+        system.debug('fbMentionObject-->'+fbMentionObject);
+        
+        if(fbMentionObject != null) {
+            system.debug('fbMentionObject--->'+fbMentionObject);
+            //InstagramAuthHelper.getAllDetailsOfMedia(String.valueOf(fbMentionObject.get('media_id')));
+        }
+    }
     public class ResponseWrapper {
         String message;
         String token;

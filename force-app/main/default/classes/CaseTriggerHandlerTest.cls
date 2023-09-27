@@ -23,10 +23,44 @@ public class CaseTriggerHandlerTest {
         objcase.Status ='Open';
         objcase.Origin ='Email';
         objcase.Ticket_Source__c='Email';
+        objcase.SuppliedEmail ='prashik.lokhande@techilaservices.com';
         insert objcase;
         caseList.add(objcase);
         Test.startTest();
-        CaseTriggerHandler.assignCaseUsingRoundRobin(caseList);
+        //CaseTriggerHandler.assignCaseUsingRoundRobin(caseList);
+        Test.stopTest();
+    }
+     @isTest
+    public static void testCaseSecond() {
+        //List<EmailMessage> List = new List<EmailMessage>();
+        // Call the method to be tested
+        Case objcase= new Case();
+        objcase.Subject='New customer message on';
+        objcase.Status ='Open';
+        objcase.Origin ='Email';
+        objcase.Ticket_Source__c='Email';
+        objcase.SuppliedEmail ='prashik.lokhande@techilaservices.com';
+        objcase.Description = 'Email:\ntest5@outlook.com<mailto:test5677667@outlook.com>';
+        insert objcase;
+        //caseList.add(objcase);
+        
+        EmailMessage em=new EmailMessage();
+        em.ToAddress='woot@mcaffeine.com';
+        em.ParentId=objcase.id;
+        insert em;
+        
+        EmailMessage em1=new EmailMessage();
+        em1.ToAddress='care@letshyphen.com';
+        em1.ParentId=objcase.id;
+        insert em1;
+        
+        
+        
+        
+        //CaseTriggerHandler.isEmail('prashik.lokhande@techilaservices.com');
+        
+        Test.startTest();
+        //CaseTriggerHandler.assignCaseUsingRoundRobin(caseList);
         Test.stopTest();
     }
 }

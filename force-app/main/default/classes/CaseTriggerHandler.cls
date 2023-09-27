@@ -14,7 +14,7 @@ public class CaseTriggerHandler {
         }
         // Get the index of the last lead assigned user in the queue
         List<Case_Round_Robin_Assignment__c> crrList = Case_Round_Robin_Assignment__c.getall().values();
-       for(Case_Round_Robin_Assignment__c objCRR:crrList ){
+        for(Case_Round_Robin_Assignment__c objCRR:crrList ){
             userIndexMap.put(objCRR.Name,objCRR.User_Index__c);
         }
         Integer emailUserIndex;
@@ -33,7 +33,7 @@ public class CaseTriggerHandler {
                 else if(objCase.Origin=='Facebook' || objCase.Origin=='Twitter'|| 
                         objCase.Origin=='Instagram'){
                             caseTeamLabel = 'Social_Media_Team';
-                }
+                        }
                 emailUserIndex = (userIndexMap.get(caseTeamLabel) == null || Integer.valueOf(userIndexMap.get(caseTeamLabel)) < -1) 
                     ? -1 : Integer.valueOf(userIndexMap.get(caseTeamLabel)); 
                 system.debug('emailUserIndex'+emailUserIndex);
@@ -56,18 +56,18 @@ public class CaseTriggerHandler {
             }
         }     
         /* for(Case_Round_Robin_Assignment__c objCrr:crrList){
-            if(objCrr.Name =='Emails_Team'){
-                objCrr.User_Index__c = emailUserIndex;
-            } else if(objCrr.Name =='Social_Media_Team'){
-                system.debug('socialUserIndex33'+socialUserIndex);
-                objCrr.User_Index__c = socialUserIndex;
-            }
-            system.debug('objCrr'+objCrr);
-            updatedCRRList.add(objCrr);
-        }
-        if(updatedCRRList.size()>0){
-           // update updatedCRRList;
-        }*/
+if(objCrr.Name =='Emails_Team'){
+objCrr.User_Index__c = emailUserIndex;
+} else if(objCrr.Name =='Social_Media_Team'){
+system.debug('socialUserIndex33'+socialUserIndex);
+objCrr.User_Index__c = socialUserIndex;
+}
+system.debug('objCrr'+objCrr);
+updatedCRRList.add(objCrr);
+}
+if(updatedCRRList.size()>0){
+// update updatedCRRList;
+}*/
     }
     Public Static void updateCasePriority(List<case> caseList){
         List<Ticketing_Rules__c> listTicketRule=[SELECT ID,Ticket_Source__c,Priority__c,Keyword__c,Case_Origin__c FROM Ticketing_Rules__c];
@@ -80,4 +80,98 @@ public class CaseTriggerHandler {
             } 
         }
     }
+    /*
+    Public Static Void updateCaseContact(List<case> caseList){
+        Map<String,Case> caseAndEmailMap = new Map<String,Case>();
+        List<Contact> conList = new List<Contact>();
+        system.debug(caseList[0].suppliedemail);
+        system.debug(caseList[0].id);
+        system.debug(caseList[0].Brand__c);
+
+        for(Case objCase : caseList){
+            system.debug('Subject---->'+objCase.Subject);
+            if(objCase!=null && objCase.Subject!=null && objCase.Subject.Contains('New customer message on') && objCase.Description!=null){
+                
+                String[] lines = objCase.Description.split('\n');
+                Boolean isEmailSection = false;
+                String email = '';
+                system.debug('objCase.Description---->'+objCase.Description);
+                for (String line : lines) {
+                    if (line.contains('Email:')) {
+                        isEmailSection = true;
+                    } else if (isEmailSection && !String.isBlank(line)) {
+                        String emailPrefix = '<mailto:';
+                        String emailSuffix = '>';
+                        
+                        Integer emailStartIdx = line.indexOf(emailPrefix);
+                        Integer emailEndIdx = line.indexOf(emailSuffix);
+                        
+                        if (emailStartIdx != -1 && emailEndIdx != -1) {
+                            email = line.substring(0, emailStartIdx).trim();
+                            break;
+                        }
+                    }
+                }
+                system.debug('email---->'+email);
+                if (!String.isBlank(email) && isEmail(email)) {
+                    if(!caseAndEmailMap.containsKey(email)){
+                        caseAndEmailMap.put(email, objCase);
+                        objCase.SuppliedEmail = email;
+                    }
+                }
+                
+            }else{
+                if(!caseAndEmailMap.containsKey(objCase.SuppliedEmail)){
+                    caseAndEmailMap.put(objCase.SuppliedEmail, objCase);
+                }
+            }
+            
+        }
+        system.debug('caseAndEmailMap---->'+caseAndEmailMap);
+        if(caseAndEmailMap!=null){
+            List<Contact> contactList = [SELECT Id,Email FROM Contact WHERE Email IN: caseAndEmailMap.keySet()];
+            Map<String,Contact> contactEmailMap = New Map<String,Contact>();
+            for(Contact objContact: contactList){
+                if(!contactEmailMap.containsKey(objContact.Email)){
+                    contactEmailMap.put(objContact.Email, objContact);
+                }
+            }
+            
+            Map<String,Contact> updatedContactEmailMap = New Map<String,Contact>();
+            List<Case> updatedCaseList = new List<Case>();
+            for(Case ObjectCase : caseList){
+                if(contactEmailMap!=null && contactEmailMap.get(ObjectCase.SuppliedEmail)!=null ){
+                    ObjectCase.ContactId = contactEmailMap.get(ObjectCase.SuppliedEmail).Id;
+                    // updatedCaseList.add(ObjectCase);
+                }else{
+                    system.debug('ObjectCase.SuppliedEmail'+ObjectCase.SuppliedEmail);
+                    if(ObjectCase.SuppliedEmail!=null && ObjectCase.SuppliedEmail.contains('@')){
+                        Contact objCon = new Contact();
+                        objCon.LastName = ObjectCase.SuppliedEmail.split('@')[0];
+                        objCon.Email = ObjectCase.SuppliedEmail;
+                        conList.add(objCon);
+                        if(!updatedContactEmailMap.containsKey(ObjectCase.SuppliedEmail)){
+                            updatedContactEmailMap.put(ObjectCase.SuppliedEmail,objCon);
+                        }
+                    }
+                }
+            }
+            if(updatedContactEmailMap.size() > 0){
+                try {
+                    insert updatedContactEmailMap.values();
+                } catch (DmlException ex) {
+                    system.debug('ex'+ex);
+                }
+            }
+            for(Case ObjectCase : caseList){
+                if(updatedContactEmailMap!=null && updatedContactEmailMap.get(ObjectCase.SuppliedEmail)!=null ){
+                    ObjectCase.ContactId = updatedContactEmailMap.get(ObjectCase.SuppliedEmail).Id;
+                }
+            }
+        }
+    }
+    public static Boolean isEmail(String input) {
+        String emailPattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$';
+        return Pattern.matches(emailPattern, input);
+    }*/
 }

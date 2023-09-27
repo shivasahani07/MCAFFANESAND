@@ -1,7 +1,7 @@
 <aura:component implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" controller="instaComponentController">
     <aura:attribute name="isModalOpen" type="boolean" default="false"/>
     <aura:attribute name="showReplies" type="boolean" default="false"/>
-    <aura:attribute name="recordId" type="string" default="a1U6D00000103KMUAY" />
+    <aura:attribute name="recordId" type="string" default="500D400000Bs1buIAB" />
     <aura:attribute name="isEditable" type="boolean" default="true"/>
     <aura:attribute name="tweetDescription" type="string" default=""/>
     <aura:attribute name="tweetId" type="string" default=""/>
@@ -19,6 +19,15 @@
     <aura:attribute name="label" type="string" default=""/>
     <aura:attribute name="urlToPost" type="string" default=""/>
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!--  for Pagination    -->
+    <aura:attribute name="PaginationList" type="List"/>
+    <aura:attribute name="columns" type="List"/> 
+    <aura:attribute name="totalRecords" type="Integer"/>
+    <aura:attribute name="startValue" type="Integer"/>
+    <aura:attribute name="endValue" type="Integer"/>
+    <aura:attribute name="isLastPage" type="Boolean"/>
+    <aura:attribute name="perPageSize" type="Integer" default="5"/>
     
     <lightning:card >
         
@@ -47,9 +56,9 @@
                     
                     <br/>
                     <div class="slds-text-heading_medium">
-                        Post Comments
-                        <br/>
                         Click here to see the Insta Post : <lightning:formattedUrl value="{!v.urlToPost}" label="POST" target="_blank" />
+                        <br/><br/>
+                        <lightning:button variant="brand" label="Refresh Comments"  onclick="{!c.refreshFeed}" />
                     </div>
                     <br/>
                     
@@ -92,7 +101,7 @@
                                     </thead>
                                     
                                     <tbody>
-                                        <aura:iteration items="{!v.relatedCommentList}" var="acc">
+                                        <aura:iteration items="{!v.PaginationList}" var="acc">
                                             <tr class="slds-hint-parent">
                                                 <th data-label="Name" scope="row">
                                                     <div class="slds-truncate" title="{!acc.comment}">
@@ -119,12 +128,16 @@
                                                     <aura:if isTrue="{!v.typeOfPost == 'Post'}">
                                                         <lightning:button title="{!acc.CommentId}" name="{!acc.CommentedBy}" value="{!acc.comment}" variant="brand" label="Reply"  onclick="{! c.openModel }" />
                                                     </aura:if>
-                                                    <lightning:button title="{!acc.CommentId}" name="{!acc.CommentedBy}" value="{!acc.comment}" variant="brand" label="View Replies"  onclick="{! c.viewCommentReplies }" />
+                                                    <lightning:button title="{!acc.CommentId}" name="{!acc.CommentedBy}" value="{!acc.comment}" variant="brand" label="Replies"  onclick="{! c.viewCommentReplies }" />
                                                 </td>
                                             </tr>
                                         </aura:iteration>
                                     </tbody>
                                 </table>
+                                <div class="slds-float_right slds-border_top">
+                                   <lightning:button onclick="{!c.previous}" disabled="{!v.startValue == 0}" label="Previous" iconName='utility:back'/>
+								    <lightning:button onclick="{!c.next}" disabled="{!v.isLastPage}" label="Next" iconName='utility:forward'/>
+                                </div>
                                 <aura:set attribute="else">
                                     <p style="text-align: center;">
                                         No comments on this post yet !!
@@ -150,9 +163,7 @@
                                 </aura:if>
                                 <!-- Modal/Popup Box Header Starts here-->
                                 <header class="slds-modal__header">
-                                    <ui:message severity="warning" closable="true">
-                                        Please do not use emoticons. 
-                                    </ui:message>
+                                   
                                     <lightning:buttonIcon iconName="utility:close"
                                                           onclick="{! c.closeModel }"
                                                           alternativeText="close"

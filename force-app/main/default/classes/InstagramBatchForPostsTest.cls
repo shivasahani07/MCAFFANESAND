@@ -1,7 +1,9 @@
 @isTest
 public class InstagramBatchForPostsTest {
-    
+    private static Id caseRecordTypeId                                       = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
     static testMethod void testme1(){
+        
+       
         Case testCase = new Case();
         testCase.Subject = 'Test Case';
         testCase.Description = 'Test Case Description';
@@ -18,26 +20,26 @@ public class InstagramBatchForPostsTest {
         insert commentRecord; 
         
         Case caseRec = new Case();
-        caseRec.Post_Id__c = 'tweetId';
+        caseRec.Post_Id__c = '17841405793087218';
+        caseRec.recordTypeId = caseRecordTypeId;
+        caseRec.Origin = 'Instagram';
         insert caserec;
         
         Post_Comments__c postComment = new Post_Comments__c();
         postComment.Case__c= caserec.Id;
-        postComment.Comment_Id__c = 'commentId';
+        postComment.Comment_Id__c = 'Post_Id__c';
         postComment.Replied_Comments__c = 'RepliesWrapper:[data=(ReplyData:[id=123, text=Test Reply 1, username=testuser1, timeStamp=2023-07-29T12:34:56+0000,Case__c=caseId])])';
         insert postComment;
         
         
-        Test.setMock(HttpCalloutMock.class, new BatchSyncMock());
+      
         
         
         Test.startTest();
-        
-        // Schedule the batch job
-        String cronExp = '0 0 0 ? * * *'; // Daily at midnight
-        System.schedule('Test Instagram Batch 1', cronExp, new ScheduleInstagramBatchForHashTags());
-        System.schedule('Test Instagram Batch 2', cronExp, new ScheduleInstagramBatchForPosts());
-        System.schedule('Test Instagram Batch 3', cronExp, new ScheduleInstagramBatchForMentions());
+        Test.setMock(HttpCalloutMock.class, new InstagramAuthHelperTestMockTest());
+        InstagramPostCreationBatch obj = new InstagramPostCreationBatch();
+        DataBase.executeBatch(obj); 
+      
         Test.stopTest();
         
       
