@@ -6,13 +6,15 @@ public class ContactTriggerHandler {
 
         
         for(Contact contactObject:contactList){
-            if(contactObject.Phone!=null){
+            if(contactObject.Phone!=null && contactObject.Phone!='NA'){
                 contactNumberSet.add(contactObject.Phone);
             }
         }
         
         for(Contact contactObject:[select id,phone,brand__C from contact where phone in:contactNumberSet]){
            Map<String,contact> tempMap= new Map<String,contact>(); 
+            String phNoKey = contactObject.phone.replaceAll('[()\\-\\s]', '');
+
             
             if(existingContactMap.containsKey(contactObject.phone)){
                 tempMap=existingContactMap.get(contactObject.phone);
@@ -36,7 +38,6 @@ public class ContactTriggerHandler {
                 	newContactObject.addError('Contact With same number and brand already exist');
                 }else if(isUpdate && existingContact!=null && (newContactObject.Id!=existingContact.Id )) {
                      newContactObject.addError('Contact With same number and brand already exist');
-
                 }
             }
             
