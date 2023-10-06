@@ -21,9 +21,12 @@ global without sharing class instaWebhookApi {
                         Map<String,Object> change = (Map<String,Object>)changesList[0];
                         if(change.get('field') == 'comments') {
                             processNewComment(requestBody);
+                            system.debug('processNewComment');
                         }else if(change.get('field') == 'mentions') {
+                           system.debug('processNewMention(change);');
                             processNewMention(change);
                         }else if(change.get('field') == 'messages') {
+                            system.debug('processNewMessages(change);');
                             processNewMessages(change);
                         }
                     }
@@ -64,6 +67,7 @@ global without sharing class instaWebhookApi {
     }
     
     private static void processNewMention(Map<String,Object> responseMap) {
+        system.debug('responseMap--in method,'+responseMap);
         Map<String, Object> fbMentionObject = (Map<String, Object>) responseMap.get('value');
         system.debug('fbMentionObject-->'+fbMentionObject);
         system.debug('fbMentionObject-------->'+fbMentionObject.get('comment_id'));
