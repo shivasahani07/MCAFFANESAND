@@ -1,5 +1,6 @@
-@RestResource(urlMapping='/instaGramAPI/V2/*')
-global without sharing class instaWebhookApi {
+
+@RestResource(urlMapping='/mcaffeine_instaGramAPI/V2/*')
+global without sharing class mcaffeine_instaWebhookApi {
     private static Id caseRecordTypeId                  = Schema.SObjectType.case.getRecordTypeInfosByName().get('Instagram').getRecordTypeId();
     static String WEB_TOKEN = 'EAAKJz6xiZC6gBAEQ7Ub3pazJxFazWFUXEkbp2Hlg0W0EmblRJVhrLLr1WUwL81hqfSxRXJJ8otiGZAyQ66onZBoRFTOqdjZBKioZA5iy55N0rxyZBulbw1XVgu6ktZA0b0vs6uZAFG7SodcyHayN2id8WAktoJejpdCcaTLF9NwV6FkTvizWzYBZC';
     @HttpPost

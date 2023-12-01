@@ -117,7 +117,7 @@ public class FBAuthController {
         }
 
         Meta_App_Credentials__c credentials = APP_CREDS_MAP.get(config);
-        PAGE_NAME = credentials.Page_Name__c;
+        PAGE_NAME = credentials.Page_Name__c != null ? credentials.Page_Name__c.toLowerCase() : credentials.Page_Name__c;
         // Prepare the API endpoint URL to get the user's pages
         String apiEndpoint = FB_GRAPH_API_BASE_URL + '/me/accounts?access_token=' + credentials.Access_Token__c;
 
@@ -126,6 +126,7 @@ public class FBAuthController {
 
         if (response.getStatusCode() == 200) {
             // Parse the JSON response to extract the list of pages
+            System.debug('--- page tokens: '+response.getBody());
             Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
             List<Object> pageDataList = (List<Object>) jsonResponse.get('data');
 
@@ -139,7 +140,7 @@ public class FBAuthController {
                     (String) pageMap.get('access_token'),
                     (List<Object>) pageMap.get('tasks')
                 );
-                pagesMap.put((String) pageMap.get('name'), pageInfo);
+                pagesMap.put(((String) pageMap.get('name')).toLowerCase(), pageInfo);
             }
 
             return pagesMap;
@@ -158,6 +159,7 @@ public class FBAuthController {
         if(myPagesMap.containsKey(PAGE_NAME)) {
             return myPagesMap.get(PAGE_NAME).accessToken;
         }
+        System.debug('--- pagemap.keyset: '+myPagesMap.keySet());
         System.debug('--- page access token no found for mentioned page: '+PAGE_NAME);
         return null;
     }

@@ -1,0 +1,52 @@
+<template>
+ <lightning-card  title="Hello">
+   <div class="mainClass">    
+<c-searchable-combobox
+    required="true"
+    label="Select Object"
+    options={options}
+    value={labelObjectName}
+    onchange={handleChange}>
+</c-searchable-combobox>
+ <p class="mtp">Selected Object  is: <b> {labelObjectName} </b></p> 
+<c-searchable-combobox
+    class="mtp"
+    required="true"
+    label="Select User"
+    options={optionsUsers}
+    value={labelUserName}
+    onchange={handleChangeUser}>
+</c-searchable-combobox>
+
+<p class="mtp">Selected user  is: <b>{labelUserName}</b> </p>
+
+    <template if:true={filedInfoObjectList} for:each={filedInfoObjectList} for:item="filedInfoObj" for:index="index">
+       <div key={filedInfoObj.fieldApiName}>
+       {filedInfoObj.fieldApiName}    
+
+
+    <div class="c-container">
+        <lightning-layout>
+            <lightning-layout-item padding="around-small">
+                <lightning-input type="checkbox" label="IsAccessible" onclick={handleEditRowSelection} value="GRA" checked={filedInfoObj.userFieldAccessObject.IsAccessible} disabled="true"></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-small">
+                <lightning-input type="checkbox" label="IsCreatable" onclick={handleEditRowSelection} value="GRA" checked={filedInfoObj.userFieldAccessObject.IsCreatable} disabled="true" ></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-small">
+                <lightning-input type="checkbox" label="IsUpdatable" onclick={handleEditRowSelection} value="GRA" checked={filedInfoObj.userFieldAccessObject.IsUpdatable} disabled="true" ></lightning-input>
+            </lightning-layout-item>
+           
+        </lightning-layout>
+    </div>
+
+
+
+
+     
+       </div>
+    </template>
+
+   </div>
+ </lightning-card>
+</template>

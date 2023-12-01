@@ -1,6 +1,6 @@
 public class ShipRocketCallbackController {
     
-    public static void updateOrderRecord(String orderIdentifier,testagainRest.shipBody shiprokcetResponse){
+    public static void updateOrderRecord(String orderIdentifier,testagainRest.shipBody shiprokcetResponse,String body){
         
          system.debug('ShipRocketCallbackController------->'+orderIdentifier); 
          List<Order_Delivery_Update__c> deliveryupdateList= new List<Order_Delivery_Update__c>();
@@ -28,6 +28,8 @@ public class ShipRocketCallbackController {
                          od.AccountId='001Hn00001uVDAPIA4';
                          od.Display_Code__c=shiprokcetResponse.order_id.split('_')[0];
                          od.Shipping_Package_Code__c=shiprokcetResponse.order_id.split('_')[1];
+              			 od.Pricebook2Id='01sHn000000qqgpIAA';
+              		     od.ShiprocketJson__c=body;		
               			 od.Status='Draft';
               			 insert od;
               

@@ -29,7 +29,7 @@ global class testagainRest {
             shipBody shpbdy=(shipBody)JSON.deserialize(body,shipBody.class);
 			system.debug('shpbdy------->'+shpbdy.scans[1]);  
             system.debug('shpbdy------->'+shpbdy.scans[1].location); 
-            ShipRocketCallbackController.updateOrderRecord(shpbdy.order_id,shpbdy);
+            ShipRocketCallbackController.updateOrderRecord(shpbdy.order_id,shpbdy,body);
        // }
         
         return 200;

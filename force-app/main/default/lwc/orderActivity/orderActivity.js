@@ -17,9 +17,10 @@ export default class OrderActivity extends LightningElement {
         getOrderDeliveryUpdates({orderId:this.recordId}).then((result) => {
             //alert('success'+JSON.stringify(result));
             this.activityList=result;
+            alert('result');
             
         }).catch((err) => {
-           // alert('err'+JSON.stringify(err));
+            alert('err'+JSON.stringify(err));
             
         });
     }

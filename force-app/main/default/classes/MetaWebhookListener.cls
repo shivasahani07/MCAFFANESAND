@@ -475,7 +475,7 @@ global without sharing class MetaWebhookListener {
 
                     }else {
                         //create case and tag post comment
-                        newConversationCaseMap.put(senderId, new Case(RecordTypeId = RECORD_TYPE_ID, Post_Id__c = senderId, OwnerId = RECORD_OWNER_ID, Subject = 'New Message From: '+senderId, Type_of_Post__c='DM', Origin = ORIGIN));
+                        newConversationCaseMap.put(senderId, new Case(Brand__c = PAGE_NAME, RecordTypeId = RECORD_TYPE_ID, Post_Id__c = senderId, OwnerId = RECORD_OWNER_ID, Subject = 'New Message From: '+senderId, Type_of_Post__c='DM', Origin = ORIGIN));
                         
                         Post_Comments__c commentRec = new Post_Comments__c();
                         commentRec.Comment__c = message.message.text;
